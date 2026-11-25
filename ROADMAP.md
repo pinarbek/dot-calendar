@@ -73,8 +73,10 @@ Device coverage is the gap. The owner's rule is iOS **and** Android, phone **and
 
 ## Later, if the owner asks
 
-- Sync across devices — needs a backend (Firebase) plus sign-in. Local-only was the choice,
-  and the same answer settled reminders: no server, so no push to a closed app.
+- Sync across devices — costed in `docs/sync-options.md` (25 Nov 2026). Free at this size;
+  the obstacle is accounts, complexity and data responsibility, not money. Three routes,
+  recommendation B (a sync code, no accounts). Awaiting a decision. The same answer still
+  settles reminders: no server, so no push to a closed app.
 - More countries, regions, or local town holidays.
 - A compact "widget" window mode for the desktop app.
 - Logo size or position tweaks.

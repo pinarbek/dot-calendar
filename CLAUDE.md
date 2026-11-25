@@ -164,7 +164,12 @@ After any change: commit and push, then `rsync -a --delete --exclude .DS_Store
 
 ## Ideas the owner may ask for next
 
-- Sync across devices. This would need a backend such as Firebase plus sign-in; the owner chose local-only for now.
+- Sync across devices. Local-only was the owner's choice at the start. Researched properly on
+  25 Nov 2026 and written up in `docs/sync-options.md`: money is not the obstacle (free to
+  10,000 users, under $5/month at 100,000; classic Firebase Auth has no user cap and no
+  charge — the $0.0055/MAU figure belongs to Identity Platform, which this app does not
+  need). Three routes are costed there, with a recommendation of **B, a sync code with no
+  accounts**. **No decision has been taken.** Read that file before discussing it again.
 - More countries or regions, or local town holidays.
 - A compact "widget" window mode for the desktop app.
 - Logo size or position tweaks.

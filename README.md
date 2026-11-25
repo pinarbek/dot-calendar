@@ -34,7 +34,7 @@ icons/                  App icons (192, 512, maskable 512, apple-touch, favicon)
 assets/                 ola | CREATIVE logo (trimmed white PNG + the original)
 netlify.toml            Static hosting config for Netlify
 tests/smoke.py          Playwright smoke test (renders 4 languages, both themes, reminders)
-docs/                   Illustration prompts from the first concept
+docs/                   Illustration prompts, and the costed sync options (sync-options.md)
 archive/                Earlier design directions (illustrated, typographic poster), kept for reference
 CLAUDE.md               Context and conventions for continuing the work with Claude Code
 ```
