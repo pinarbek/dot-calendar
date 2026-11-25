@@ -46,7 +46,8 @@ Device coverage is the gap. The owner's rule is iOS **and** Android, phone **and
       languages
 - [ ] Check the reminder flow survives a real overnight gap (fires at the right local time,
       `fired` state not replayed)
-- [ ] Decide whether notifications need a permission prompt on first run or stay opt-in
+- [x] Reminder delivery settled: no push when the app is closed. Stays opt-in, and `.ics`
+      export is the answer for anything that must fire with the app shut
 - [ ] Re-run `tests/smoke.py` and bump `VERSION` in `sw.js` before the final push
 
 ## Custom domain (parked until finalised)
@@ -59,7 +60,8 @@ Device coverage is the gap. The owner's rule is iOS **and** Android, phone **and
 
 ## Later, if the owner asks
 
-- Sync across devices — needs a backend (Firebase) plus sign-in. Local-only was the choice.
+- Sync across devices — needs a backend (Firebase) plus sign-in. Local-only was the choice,
+  and the same answer settled reminders: no server, so no push to a closed app.
 - More countries, regions, or local town holidays.
 - A compact "widget" window mode for the desktop app.
 - Logo size or position tweaks.

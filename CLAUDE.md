@@ -44,6 +44,13 @@ Context for continuing this project. Read this before changing anything.
   count it takes `.cnt` and is sized like the weekday row (14px desktop, 10px phone), not
   like the header.
 - **Logo:** The ola | CREATIVE logo is a white PNG embedded as a CSS mask, so it takes `var(--ink)` and works in both themes. On the calendar screen it sits under the grid; the panel carries its own copy at the bottom.
+- **Reminders stay local; no push when the app is closed (decided 25 Nov 2026).** Asked
+  directly whether notifications should arrive with the app fully closed, the owner said no.
+  So the three paths stay as they are: a pop-up and chime while the app is open (`tick()`
+  every 20s, with a 36-hour catch-up for reminders whose time passed while the device was
+  off), a system notification when the app is installed and running or backgrounded, and
+  `.ics` export with a VALARM for anything that must fire regardless. Do not add a service
+  worker push path or a backend for this.
 - **Rejected directions:** AI-illustrated monthly scenes, and a giant-month-word poster. Both are in `archive/` for reference only.
 - **Never copy third-party artwork:** The owner once asked to feed other artists' images to an image model as references. That was declined: describe styles in words instead.
 
