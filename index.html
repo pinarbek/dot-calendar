@@ -19,7 +19,7 @@
    PICTURE: the dot grid itself; past = filled ink, upcoming = empty rings, today = orange, notes = colour stickers overlapping their day
    COLOUR and TYPE: warm grey paper, near-black ink, one orange for today, a small bright set for notes; Inter Tight only
    LAYOUT: desktop = date + dots left, notes right; phone = one calm column */
-:root{color-scheme:light dark;--bg:light-dark(#e8e6e1,#1a1a1a);--ink:light-dark(#151515,#ece9e3);--mute:light-dark(#8b8882,#7d7a74);--ring:light-dark(#c9c6bf,#3a3936);--line:light-dark(#d6d3cc,#262523);--card:light-dark(#f1efeb,#1c1c1b);--today:#f26b21;--hol:#e0382c;--up-bg:light-dark(transparent,#f3f1ec);--up-ring:light-dark(#c9c6bf,transparent);--up-fg:light-dark(#151515,#151515);--past-bg:light-dark(#151515,#454441);--past-fg:light-dark(#8b8882,#a3a09a);--has-ring:light-dark(#151515,#f3f1ec)}
+:root{color-scheme:light dark;--bg:light-dark(#e8e6e1,#1a1a1a);--ink:light-dark(#151515,#ece9e3);--mute:light-dark(#8b8882,#7d7a74);--ring:light-dark(#c9c6bf,#3a3936);--line:light-dark(#d6d3cc,#262523);--card:light-dark(#f1efeb,#1c1c1b);--today:#f26b21;--hol:#e0382c;--up-bg:light-dark(transparent,#f3f1ec);--up-ring:light-dark(#c9c6bf,transparent);--up-fg:light-dark(#151515,#151515);--past-bg:light-dark(#151515,#454441);--past-fg:light-dark(#8b8882,#a3a09a);--has-ring:light-dark(#151515,#f3f1ec);--we-bg:light-dark(#c9c6bf,#3a3936);--we-fg:light-dark(#151515,#ece9e3)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Inter Tight",Inter,"Helvetica Neue",Helvetica,system-ui,sans-serif;overflow-x:clip;font-feature-settings:"tnum" 1}
@@ -52,6 +52,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 @media(max-width:699px){.dows .l{display:none}.dows .s{display:inline}}
 .grid{padding-bottom:clamp(18px,4vw,40px)}
 .day{position:relative;aspect-ratio:1;border-radius:50%;background:var(--up-bg);box-shadow:inset 0 0 0 2px var(--up-ring);color:var(--up-fg);transition:transform .15s}
+.day.we{background:var(--we-bg);box-shadow:none;color:var(--we-fg)}
 .day .n{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:Archivo,"Inter Tight",sans-serif;font-stretch:125%;font-size:clamp(9px,1.05vw,12.5px);font-weight:700;letter-spacing:.03em;line-height:1}
 @media(min-width:700px){.day .n{left:21%;top:19%;transform:none}}
 .day.past{background:var(--past-bg);box-shadow:none;color:var(--past-fg)}
@@ -64,7 +65,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .day:not(.out):hover{transform:scale(1.04)}
 /* a note covers its day until the day arrives, then slides away to reveal the date */
 .day.today .stk,.day.past .stk{left:22%;top:22%}
-.day.has:not(.past):not(.today):hover .stk{left:9%;top:9%}
+.day.has:not(.past):not(.today):hover .stk{left:22%;top:22%}
 .reveal .day.today .stk{animation:uncover 1.2s cubic-bezier(.3,1.35,.45,1) .5s both}
 @keyframes uncover{0%{left:0;top:0}35%{left:-3%;top:-3%}100%{left:22%;top:22%}}
 .stk{position:absolute;left:0;top:0;transition:left .5s cubic-bezier(.3,1.3,.5,1),top .5s cubic-bezier(.3,1.3,.5,1);width:100%;aspect-ratio:1;border-radius:50%;background:var(--c);color:var(--sc);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:9% 8%;z-index:3;font-family:Archivo,"Inter Tight",sans-serif;font-stretch:100%;font-weight:700;font-size:clamp(6.5px,.6vw,8px);line-height:1.2;text-transform:uppercase;letter-spacing:.01em;pointer-events:none}
@@ -524,7 +525,8 @@ function render(anim){
     const d=new Date(Y,M,c-lead+1),k=key(d.getFullYear(),d.getMonth(),d.getDate()),n=store.notes[k];
     if(d.getMonth()!==M){h+=`<div class="day out" aria-hidden="true"></div>`;continue}
     const hol=holOf(k),off=hol&&hol.kind!=="fun";
-    const cls=["day",k===tk?"today":k<tk?"past":"",off?"hol":"",n?"has":""].join(" ");
+    const wk=d.getDay()%6===0;
+    const cls=["day",wk?"we":"",k===tk?"today":k<tk?"past":"",off?"hol":"",n?"has":""].join(" ");
     const lab=fmtLong(d)+(k===tk?" ("+t("today")+")":"")+(hol?", "+hol.name:"")+(n?": "+n.t:"")+(n&&n.r?", "+t("reminder")+" "+n.r:"");
     const hs=!n&&off,col=n?colorOf(k,n):hs?catCol("holiday"):"";
     h+=`<button class="${cls}${hs?" has":""}" data-k="${k}" aria-label="${esc(lab)}" title="${esc((hol?hol.name+"\n":"")+(n?n.t:""))}" style="animation-delay:${c*12}ms"><span class="n">${d.getDate()}</span>${hs?`<span class="stk" style="--c:${col};--sc:${ink(col)};font-size:${fitStk(hol.name)}"><span>${esc(hol.name.replace(" ("+t("half")+")"," ½"))}</span></span>`:""}${n?`<span class="stk" style="--c:${col};--sc:${ink(col)};font-size:${fitStk(n.t)}">${n.r?`<b>${esc(n.r)}</b>`:""}<span>${esc(n.t.split("\n")[0].slice(0,60))}</span></span>`:""}</button>`;
