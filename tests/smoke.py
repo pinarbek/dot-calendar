@@ -139,6 +139,51 @@ async def main():
         check(not errs, f"no script errors in the panel {errs}")
         await pg.context.close()
 
+        print("Several notes on one day")
+        pg, errs = await page_for(b, base, 1280, 950, seed(lang="en", country="ES"), "january-2027")
+        await pg.click('[data-k="2027-01-14"]')
+        await pg.wait_for_timeout(400)
+        check(await pg.is_visible("#nTabs"), "the editor shows the day's notes")
+
+        async def add_note(text, cat, when):
+            await pg.click("#nAdd")
+            await pg.wait_for_timeout(300)
+            await pg.fill("#nText", text)
+            await pg.click(f'#cats [data-cat="{cat}"]')
+            await pg.check("#rOn")
+            await pg.fill("#rTime", when)
+            await pg.wait_for_timeout(200)
+
+        await add_note("Lunch", "meeting", "13:00")
+        await add_note("Birthday", "birthday", "20:00")
+        await pg.wait_for_timeout(300)
+        day = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes['2027-01-14']")
+        check(len(day) == 3, f"the + button adds notes without replacing (got {len(day)})")
+        # the seeded note carries no time, and untimed notes sort first
+        check([n.get("r") for n in day] == [None, "13:00", "20:00"],
+              f"each note keeps its own time, untimed first ({[n.get('r') for n in day]})")
+        check([n.get("cat") for n in day] == ["work", "meeting", "birthday"], "each note keeps its own category and colour")
+        check(len({n["id"] for n in day}) == 3, "each note has its own id")
+
+        await pg.click('#nTabs button[data-id]')
+        await pg.wait_for_timeout(300)
+        await pg.click("#nDel")
+        await pg.wait_for_timeout(500)
+        left = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes['2027-01-14']")
+        check(len(left) == 2, "deleting removes one note, not the day")
+        check(await pg.is_visible("#ovNote"), "the editor stays open while notes remain")
+        await pg.click("#nDone")
+        await pg.wait_for_timeout(300)
+
+        await pg.click("#bList")
+        await pg.wait_for_timeout(600)
+        listed = await pg.evaluate(
+            "[...document.querySelectorAll('#ul li')].map(li => li.innerText.replace(/\\n/g, ' '))")
+        on_day = [row for row in listed if "Lunch" in row or "Birthday" in row]
+        check(len(on_day) == 2, f"the panel lists every note of the day, not just one ({len(on_day)})")
+        check(not errs, f"no script errors with several notes {errs}")
+        await pg.context.close()
+
         print("The circle advances through the day")
         # One circle per day still, but on today it shows the next note yet to come, so the
         # 13:00 one takes over once 11:00 has passed. Ahead of today a day opens on its

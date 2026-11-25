@@ -123,6 +123,15 @@ body.dragmode{touch-action:none;user-select:none;-webkit-user-select:none}
 .dlg{background:var(--bg);color:var(--ink);width:min(520px,100%);border-radius:20px 20px 0 0;padding:24px 20px max(20px,env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
 @media(min-width:640px){.ov{align-items:center;padding:20px}.dlg{border-radius:20px}}
 .dlg h3{margin:0;font-size:30px;font-weight:600;letter-spacing:-.025em;line-height:1.05}
+/* the day's notes, so a second and third can be added and switched between */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 2px}
+.tabs button{display:inline-flex;align-items:center;gap:7px;max-width:100%;border:1.5px solid var(--ring);
+  background:transparent;color:var(--ink);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;cursor:pointer}
+.tabs button .sw{width:11px;height:11px;border-radius:50%;background:var(--c,var(--ring));flex:none}
+.tabs button .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabs button.on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.tabs button.add{font-weight:700;letter-spacing:.06em;font-stretch:125%;text-transform:uppercase;font-size:12px}
+.tabs button:focus-visible{outline:2px solid var(--today);outline-offset:2px}
 .dlg p{margin:6px 0 14px;color:var(--mute);font-size:15px}
 .dlg p.hname{color:var(--hol);font-weight:600}
 .dlg textarea{width:100%;min-height:140px;border:1.5px solid var(--ring);border-radius:12px;padding:12px;font-size:16px;line-height:1.5;resize:vertical;background:var(--card)}
@@ -256,6 +265,7 @@ body{font-family:Archivo,"Inter Tight",system-ui,sans-serif}
   <div class="dlg">
     <h3 id="nTitle">Note</h3>
     <p id="nSub">Saved automatically on this device.</p>
+    <div class="tabs" id="nTabs"></div>
     <textarea id="nText" data-i18n-ph="placeholder" placeholder="What's happening this day?"></textarea>
     <div class="row" id="cats"><span class="cl" data-i18n="type">Type</span></div>
     <div class="remind">
@@ -357,7 +367,7 @@ const LOCALE={en:"en-GB",es:"es-ES",ca:"ca-ES",tr:"tr-TR"};
 const WD3={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],es:["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"],ca:["Dg","Dl","Dt","Dc","Dj","Dv","Ds"],tr:["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"]};
 const WD1={en:["S","M","T","W","T","F","S"],es:["D","L","M","X","J","V","S"],ca:["DG","DL","DT","DC","DJ","DV","DS"],tr:["P","P","S","Ç","P","C","C"]};
 const T={
-en:{today:"Today",install:"Install",share:"Share",dark:"Dark",light:"Light",settings:"Settings",list:"Notes",backToday:"Back to today",
+en:{today:"Today",install:"Install",share:"Share",dark:"Dark",light:"Light",settings:"Settings",list:"Notes",addNote:"Add note",backToday:"Back to today",
  past:"Past",upcoming:"Upcoming",personal:"Personal",work:"Work",meeting:"Meeting",birthday:"Birthday",holiday:"Holiday",
  next24:"Next 24 hours",noRem:"No reminders",more:"+{n} more",note1:"{n} note",noteN:"{n} notes",empty:"Nothing planned yet. Tap a day to add a note.",
  publicHol:"public holiday",half:"half day",day:"day",substitute:"substitute day",motto:"FEWER THINGS, BETTER DAYS",
@@ -377,7 +387,7 @@ en:{today:"Today",install:"Install",share:"Share",dark:"Dark",light:"Light",sett
  tSelect:"Select all and copy this code",tPaste:"Paste your code, then tap again",tRestored:"Restored {n} notes",tMoved:"Moved to {d}",tSwapped:"Swapped with {d}",tBad:"That backup could not be read",tLink:"Link copied — send it to anyone",
  tAddr:"Copy the link from the address bar",tNoDl:"Downloads aren't available here",tDlFail:"Download failed",shareText:"A calm, minimal calendar you can take notes in",
  none:"None",cTR:"Türkiye",cES:"Spain",cCAT:"Catalonia",cGB:"United Kingdom",cDE:"Germany",cUS:"United States"},
-es:{today:"Hoy",install:"Instalar",share:"Compartir",dark:"Oscuro",light:"Claro",settings:"Ajustes",list:"Notas",backToday:"Volver a hoy",
+es:{today:"Hoy",install:"Instalar",share:"Compartir",dark:"Oscuro",light:"Claro",settings:"Ajustes",list:"Notas",addNote:"Añadir nota",backToday:"Volver a hoy",
  past:"Pasados",upcoming:"Próximos",personal:"Personal",work:"Trabajo",meeting:"Reunión",birthday:"Cumpleaños",holiday:"Festivo",
  next24:"Próximas 24 horas",noRem:"Sin recordatorios",more:"+{n} más",note1:"{n} nota",noteN:"{n} notas",empty:"Aún no hay nada. Toca un día para añadir una nota.",
  publicHol:"festivo oficial",half:"medio día",day:"día",substitute:"día sustitutivo",motto:"MENOS COSAS, MEJORES DÍAS",
@@ -397,7 +407,7 @@ es:{today:"Hoy",install:"Instalar",share:"Compartir",dark:"Oscuro",light:"Claro"
  tSelect:"Selecciona todo y copia este código",tPaste:"Pega tu código y vuelve a pulsar",tRestored:"{n} notas restauradas",tMoved:"Movido al {d}",tSwapped:"Intercambiado con {d}",tBad:"No se ha podido leer la copia",tLink:"Enlace copiado: envíalo a quien quieras",
  tAddr:"Copia el enlace de la barra de direcciones",tNoDl:"Aquí no se pueden descargar archivos",tDlFail:"No se ha podido descargar",shareText:"Un calendario sencillo y tranquilo para tomar notas",
  none:"Ninguno",cTR:"Turquía",cES:"España",cCAT:"Cataluña",cGB:"Reino Unido",cDE:"Alemania",cUS:"Estados Unidos"},
-ca:{today:"Avui",install:"Instal·lar",share:"Compartir",dark:"Fosc",light:"Clar",settings:"Ajustos",list:"Notes",backToday:"Tornar a avui",
+ca:{today:"Avui",install:"Instal·lar",share:"Compartir",dark:"Fosc",light:"Clar",settings:"Ajustos",list:"Notes",addNote:"Afegir nota",backToday:"Tornar a avui",
  past:"Passats",upcoming:"Propers",personal:"Personal",work:"Feina",meeting:"Reunió",birthday:"Aniversari",holiday:"Festiu",
  next24:"Properes 24 hores",noRem:"Sense recordatoris",more:"+{n} més",note1:"{n} nota",noteN:"{n} notes",empty:"Encara no hi ha res. Toca un dia per afegir una nota.",
  publicHol:"festiu oficial",half:"mig dia",day:"dia",substitute:"dia substitutiu",motto:"MENYS COSES, MILLORS DIES",
@@ -417,7 +427,7 @@ ca:{today:"Avui",install:"Instal·lar",share:"Compartir",dark:"Fosc",light:"Clar
  tSelect:"Selecciona-ho tot i copia aquest codi",tPaste:"Enganxa el codi i torna a prémer",tRestored:"{n} notes restaurades",tMoved:"Mogut al {d}",tSwapped:"Intercanviat amb {d}",tBad:"No s'ha pogut llegir la còpia",tLink:"Enllaç copiat: envia'l a qui vulguis",
  tAddr:"Copia l'enllaç de la barra d'adreces",tNoDl:"Aquí no es poden baixar fitxers",tDlFail:"No s'ha pogut baixar",shareText:"Un calendari senzill i tranquil per prendre notes",
  none:"Cap",cTR:"Turquia",cES:"Espanya",cCAT:"Catalunya",cGB:"Regne Unit",cDE:"Alemanya",cUS:"Estats Units"},
-tr:{today:"Bugün",install:"Yükle",share:"Paylaş",dark:"Koyu",light:"Açık",settings:"Ayarlar",list:"Notlar",backToday:"Bugüne dön",
+tr:{today:"Bugün",install:"Yükle",share:"Paylaş",dark:"Koyu",light:"Açık",settings:"Ayarlar",list:"Notlar",addNote:"Not ekle",backToday:"Bugüne dön",
  past:"Geçmiş",upcoming:"Gelecek",personal:"Kişisel",work:"İş",meeting:"Toplantı",birthday:"Doğum günü",holiday:"Tatil",
  next24:"Önümüzdeki 24 saat",noRem:"Hatırlatma yok",more:"+{n} daha",note1:"{n} not",noteN:"{n} not",empty:"Henüz bir şey yok. Not eklemek için bir güne dokunun.",
  publicHol:"resmî tatil",half:"yarım gün",day:"gün",substitute:"telafi günü",motto:"DAHA AZ ŞEY, DAHA GÜZEL GÜNLER",
@@ -628,8 +638,15 @@ function render(anim){
   const nc=items.reduce((a,k)=>a+dayNotes(k).length,0);$("lc").textContent=nc?nNotes(nc):"";
   $("wd").textContent=isCur?WD3[lang()][tday.getDay()]:(nc?nNotes(nc):"");
   $("wd").className=isCur?"w":"w cnt";
-  $("ul").innerHTML=items.length?items.map(k=>{const n=shownNote(k),hol=H[k],hc=!n&&hol&&hol.kind!=="fun",col=n?colorOf(k,n):hc?catCol("holiday"):"";
-    return `<li><button data-k="${k}"><span class="dd${n||hc?" c":""}" ${n||hc?`style="--c:${col};--sc:${ink(col)}"`:""}>${+k.slice(8)}</span><span class="tx">${hol?`<small class="${hol.kind==="fun"?"f":""}">${esc(hol.name)}${hol.kind==="off"?" · "+t("publicHol"):""}</small>`:""}${n&&n.cat?`<small class="w" style="--c:${col};--sc:${ink(col)}">${esc(catName(n.cat))}</small>`:""}${n?(n.r?`<b>${esc(n.r)}${n.w>0?` (${t(n.w===1?"before1d":"before1w")})`:""}</b> · `:"")+esc(n.t):""}</span></button></li>`}).join(""):`<div class="empty">${esc(t("empty"))}</div>`;
+  $("ul").innerHTML=items.length?items.map(k=>{
+    const hol=H[k],list=dayNotes(k);
+    const rows=list.length?list:[null];        // a holiday with no note still gets one row
+    return rows.map((n,ix)=>{
+      const hc=!n&&hol&&hol.kind!=="fun",col=n?colorOf(k,n):hc?catCol("holiday"):"";
+      const showHol=hol&&ix===0;               // name the holiday once, on the day's first row
+      return `<li><button data-k="${k}"${n?` data-id="${n.id}"`:""}><span class="dd${n||hc?" c":""}" ${n||hc?`style="--c:${col};--sc:${ink(col)}"`:""}>${ix===0?+k.slice(8):""}</span><span class="tx">${showHol?`<small class="${hol.kind==="fun"?"f":""}">${esc(hol.name)}${hol.kind==="off"?" · "+t("publicHol"):""}</small>`:""}${n&&n.cat?`<small class="w" style="--c:${col};--sc:${ink(col)}">${esc(catName(n.cat))}</small>`:""}${n?(n.r?`<b>${esc(n.r)}${n.w>0?` (${t(n.w===1?"before1d":"before1w")})`:""}</b> · `:"")+esc(n.t):""}</span></button></li>`;
+    }).join("");
+  }).join(""):`<div class="empty">${esc(t("empty"))}</div>`;
   renderToday();
   if(anim){const g=$("grid");g.classList.remove("in");void g.offsetWidth;g.classList.add("in")}
   if(location.hash!=="#"+MONTHS_EN[M].toLowerCase()+"-"+Y)try{history.replaceState(null,"","#"+MONTHS_EN[M].toLowerCase()+"-"+Y)}catch(e){}
@@ -644,13 +661,25 @@ const renderCats=()=>{document.querySelectorAll("#cats [data-cat]").forEach(b=>b
 const setDots=()=>{document.querySelectorAll("#dots button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.c===curC));
   document.querySelectorAll("#cats [data-cat]").forEach(b=>{const id=b.dataset.cat,c=id?catCol(id):"#151515";b.style.setProperty("--c",id?c:"var(--ink)");b.style.setProperty("--sc",id?ink(c):"var(--bg)");b.setAttribute("aria-pressed",curCat===id)});
   $("dots").style.visibility=curCat?"hidden":"visible";$("nHex").closest(".cpick").style.visibility=curCat?"hidden":"visible";$("nHex").closest(".cpick").classList.toggle("on",!!curHex)};
-function openNote(k){
-  cur=k;const [y,m,d]=k.split("-").map(Number),dt=new Date(y,m-1,d),n=shownNote(k);curId=n?n.id:null;
+function renderTabs(){
+  const list=dayNotes(cur),h=[];
+  for(const n of list){
+    const lab=(n.r?n.r+" ":"")+(n.t.split("\n")[0].slice(0,22)||t("reminder"));
+    h.push(`<button data-id="${n.id}" class="${n.id===curId?"on":""}"><span class="sw" style="--c:${colorOf(cur,n)}"></span><span class="lb">${esc(lab)}</span></button>`);
+  }
+  h.push(`<button class="add${curId?"":" on"}" id="nAdd">+ ${esc(t("addNote"))}</button>`);
+  $("nTabs").innerHTML=h.join("");
+  $("nTabs").hidden=list.length===0&&!curId;
+}
+function openNote(k,id){
+  cur=k;const [y,m,d]=k.split("-").map(Number),dt=new Date(y,m-1,d);
+  const n=id===null?null:(id?noteById(k,id):shownNote(k));curId=n?n.id:null;
   $("nTitle").textContent=fmtLong(dt);
   $("nText").value=n?n.t:"";curC=n?(Number.isInteger(n.c)?n.c:-1):-1;curHex=n&&n.hex||"";if(curHex)$("nHex").value=curHex;curCat=n&&n.cat||"";setDots();
   const hol=holOf(k);$("nSub").textContent=hol?hol.name+(hol.kind==="off"?" · "+t("publicHol"):""):t("saved");
   $("nSub").className=hol&&hol.kind!=="fun"?"hname":"";
   $("rOn").checked=!!(n&&n.r);$("rTime").value=n&&n.r||"09:00";$("rWhen").value=String(n&&n.w||0);syncRem();
+  renderTabs();
   $("ovNote").classList.add("on");setTimeout(()=>$("nText").focus(),50);
 }
 const syncRem=()=>$("rOn").closest(".remind").classList.toggle("on",$("rOn").checked);
@@ -735,13 +764,23 @@ function renderToday(){
 $("bBack").onclick=()=>{const d=new Date();Y=d.getFullYear();M=d.getMonth();render(true)};
 $("todaybar").onclick=()=>{$("ovList").classList.remove("on");const d=new Date();Y=d.getFullYear();M=d.getMonth();render(true)};
 const closeNote=()=>{commit();cur=null;$("ovNote").classList.remove("on");render(false)};
-$("nText").addEventListener("input",commit);
-$("cats").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(!b)return;curCat=b.dataset.cat;setDots();commit()});
-$("dots").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;curC=+b.dataset.c;curHex="";setDots();commit()});
+$("nText").addEventListener("input",()=>{commit();renderTabs()});
+$("cats").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(!b)return;curCat=b.dataset.cat;setDots();commit();renderTabs()});
+$("dots").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;curC=+b.dataset.c;curHex="";setDots();commit();renderTabs()});
 $("nHex").addEventListener("input",e=>{curHex=e.target.value;curC=-1;curCat="";setDots();commit()});
+$("nTabs").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  commit();                                   // keep what is on screen before switching
+  openNote(cur,b.id==="nAdd"?null:b.dataset.id);
+});
 $("nDone").onclick=closeNote;
-$("nDel").onclick=()=>{$("nText").value="";$("rOn").checked=false;commit();closeNote();toast(t("tDeleted"))};
-document.addEventListener("click",e=>{if(skipClick){skipClick=false;return}const d=e.target.closest("[data-k]");if(d)openNote(d.dataset.k);const c=e.target.closest("#chips button");if(c){M=+c.dataset.m;render(true)}});
+$("nDel").onclick=()=>{
+  $("nText").value="";$("rOn").checked=false;commit();
+  const left=dayNotes(cur);
+  if(left.length){render(false);openNote(cur,left[0].id)}else closeNote();
+  toast(t("tDeleted"));
+};
+document.addEventListener("click",e=>{if(skipClick){skipClick=false;return}const d=e.target.closest("[data-k]");if(d)openNote(d.dataset.k,d.dataset.id);const c=e.target.closest("#chips button");if(c){M=+c.dataset.m;render(true)}});
 const closeOv=o=>{if(o.id==="ovNote")closeNote();else if(o.id==="ovRem")nextRem();else o.classList.remove("on")};
 document.querySelectorAll(".ov").forEach(o=>o.addEventListener("click",e=>{if(e.target===o)closeOv(o)}));
 document.addEventListener("keydown",e=>{

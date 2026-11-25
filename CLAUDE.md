@@ -58,6 +58,9 @@ Context for continuing this project. Read this before changing anything.
   the circle keeps the last note. Notes sort untimed first, then by time. No "+2 more" badge
   on the circle: the panel lists them. `shownNote()` holds this rule, and `tick()` re-renders
   when the signature of shown notes changes, so the circle turns over on its own.
+  The editor carries a strip of the day's notes with a **+** to start another; tapping a chip
+  switches to that note, Delete removes only that one and stays open while others remain.
+  The panel lists every note, one row each, with the day number only on the first.
 - **A note moves by dragging its sticker onto another day.** Mouse drags after 7px; a
   finger must hold still for 300ms first, so the month swipe and page scrolling still work
   (a finger that travels early is treated as a swipe). Dropping on a day that already has a
