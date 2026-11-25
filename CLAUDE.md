@@ -14,6 +14,11 @@ Context for continuing this project. Read this before changing anything.
   2. A bold "content calendar" sticker look: each note is a colour circle the same size as the day, offset about 22% down and right, with small uppercase text inside. The day under it turns into a thin outlined ring.
 - **Animation:** A note sticker fully covers its day, hiding the number, until that day arrives. On load, today's sticker slides off with a small anticipation bounce (`@keyframes uncover`). Past notes stay slid off. Hovering a future note peeks at it.
 - **Typography:** Archivo (Google Fonts, variable `wdth 62–125`) everywhere. Labels, buttons and headings use expanded caps (`font-stretch:125%`). Note text in the list and in the textarea stays at normal width for readability.
+- **Weekday spelling:** `WD3` holds mixed case (`Sun`, `Paz`, `Dom`, `Dg`). The header takes
+  it as written; the weekday row is uppercased in CSS, so one dictionary serves both.
+- **Date numeral:** `20cqw`, at `17%/15%` of the day. It used to sit at `21%/19%` at `25cqw`,
+  which left 14% of it under the sticker once that slid to `22%/22%`. Any change to either
+  position has to be re-checked against the slid state.
 - **Themes:** Light grey (default) and black. In black, the grid matches the content-calendar reference: upcoming days are white filled circles and past days are dark grey.
 - **Palette (owner-supplied, exact hex):** `#ff5a00 #ff9700 #ffcc00 #563cf3 #2495ff #00dbee #f6042e #ff62d7 #febaff #038a6c #7ac841 #a6fe5a`. The owner also wants a free colour picker.
 - **Category defaults:** work `#563cf3`, meeting `#2495ff`, birthday `#ff62d7`, holiday `#f6042e`. Holidays must be **red from the start**.
@@ -21,17 +26,17 @@ Context for continuing this project. Read this before changing anything.
 - **Layout:** One column at every width. On desktop (≥960px) the whole month must fit one
   screen without scrolling, measured to the lowest element on the page, not just the grid.
   On phones the stickers show no text (too small), only colour.
-- **Header stays side by side (decided 25 Nov 2026).** The owner's reference showed the
-  stacked header — numeral above, month and year below, weekday right — which is what the
-  narrow layout already does. Offered as A/B/C against measurements: stacking costs about
-  10px of dot diameter at every desktop size, because the header and the grid share the same
-  vertical space. The owner chose **A**, the side-by-side header, so the dots stay largest.
-  Do not re-open this without new reason.
+- **Header is stacked at every width (decided 25 Nov 2026).** Numeral above, month and year
+  below, weekday or note count on the right — matching the owner's reference, and what the
+  narrow layout always did. Offered as A/B/C against measurements; the owner chose **C**,
+  accepting that it costs about 10px of dot diameter because the header and the grid share
+  the same vertical space. Hence the larger reserve below.
 - **Dot size:** derived from the height actually free, divided by the rows the month needs:
-  `--avail: calc(100vh - 235px - 18.5vh)`, `--dot: (--avail - (--rows - 1) * --gap) / --rows`,
+  `--avail: calc(100vh - 302px - 18.5vh)`, `--dot: (--avail - (--rows - 1) * --gap) / --rows`,
   sheet width `7 * --dot + 6 * --gap`. `--rows` is set by `render()`. The 235px + 18.5vh
-  reserve was measured across eight windows (186px + 17.4vh) plus a margin. Dots land at
-  90-148px on four-row months, 70-138px on five-row, 57-138px on six-row.
+  reserve was measured across eight windows (186px + 17.4vh), plus a margin and the 67px the
+  stacked header adds. Dots land at 73-141px on four-row months, 57-138px on five-row and
+  54-137px on six-row.
 - **Month list, note count and legend live in a panel** (`#ovList`), opened by the Notes
   button, sliding in from the right, anchored to the right edge, scrolling on its own. The
   calendar screen keeps only the month, the grid and the logo.
