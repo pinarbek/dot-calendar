@@ -49,6 +49,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .dows,.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(5px,1.1vw,10px)}
 .dows div{text-align:center;font-family:Archivo,sans-serif;font-stretch:125%;font-weight:700;font-size:clamp(10px,1.25vw,14px);letter-spacing:.02em;color:var(--ink);padding-bottom:clamp(8px,1.5vw,14px)}
 .dows .we{color:var(--mute)}.dows .s{display:none}
+.mo .w.cnt{font-family:Archivo,sans-serif;font-stretch:125%;font-weight:700;font-size:clamp(10px,1.25vw,14px)!important;letter-spacing:.02em;color:var(--mute);align-self:flex-end;padding-bottom:.35em}
 @media(max-width:699px){.dows .l{display:none}.dows .s{display:inline}}
 .grid{padding-bottom:clamp(18px,4vw,40px)}
 .day{position:relative;aspect-ratio:1;border-radius:50%;background:var(--up-bg);box-shadow:inset 0 0 0 2px var(--up-ring);color:var(--up-fg);transition:transform .15s}
@@ -570,6 +571,7 @@ function render(anim){
   $("lh").textContent=`${monthName(M)} ${Y}`;
   const nc=items.filter(k=>store.notes[k]).length;$("lc").textContent=nc?nNotes(nc):"";
   $("wd").textContent=isCur?WD3[lang()][tday.getDay()]:(nc?nNotes(nc):"");
+  $("wd").className=isCur?"w":"w cnt";
   $("ul").innerHTML=items.length?items.map(k=>{const n=store.notes[k],hol=H[k],hc=!n&&hol&&hol.kind!=="fun",col=n?colorOf(k,n):hc?catCol("holiday"):"";
     return `<li><button data-k="${k}"><span class="dd${n||hc?" c":""}" ${n||hc?`style="--c:${col};--sc:${ink(col)}"`:""}>${+k.slice(8)}</span><span class="tx">${hol?`<small class="${hol.kind==="fun"?"f":""}">${esc(hol.name)}${hol.kind==="off"?" · "+t("publicHol"):""}</small>`:""}${n&&n.cat?`<small class="w" style="--c:${col};--sc:${ink(col)}">${esc(catName(n.cat))}</small>`:""}${n?(n.r?`<b>${esc(n.r)}${n.w>0?` (${t(n.w===1?"before1d":"before1w")})`:""}</b> · `:"")+esc(n.t):""}</span></button></li>`}).join(""):`<div class="empty">${esc(t("empty"))}</div>`;
   renderToday();
