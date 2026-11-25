@@ -612,7 +612,8 @@ const ink=hex=>{const v=parseInt(hex.slice(1),16),r=(v>>16)/255,g=(v>>8&255)/255
 const fitStk=()=>"";   // long text is clipped with an ellipsis rather than shrunk
 function render(anim){
   const tday=new Date(),isCur=tday.getFullYear()===Y&&tday.getMonth()===M;
-  $("big").textContent=isCur?tday.getDate():pad(M+1);
+  $("big").textContent=pad(tday.getDate());
+  $("big").style.visibility=isCur?"visible":"hidden";
   $("mname").textContent=monthName(M);$("yr").textContent=Y;
   $("bBack").hidden=isCur;
   const ws=store.weekStart,names=WD1[lang()];
@@ -636,8 +637,8 @@ function render(anim){
   const items=[...new Set([...Object.keys(store.notes),...Object.keys(H)])].filter(k=>k.startsWith(pre)).sort();
   $("lh").textContent=`${monthName(M)} ${Y}`;
   const nc=items.reduce((a,k)=>a+dayNotes(k).length,0);$("lc").textContent=nc?nNotes(nc):"";
-  $("wd").textContent=isCur?WD3[lang()][tday.getDay()]:(nc?nNotes(nc):"");
-  $("wd").className=isCur?"w":"w cnt";
+  $("wd").textContent=isCur?WD3[lang()][tday.getDay()]:"";
+  $("wd").className="w";
   $("ul").innerHTML=items.length?items.map(k=>{
     const hol=H[k],list=dayNotes(k);
     const rows=list.length?list:[null];        // a holiday with no note still gets one row

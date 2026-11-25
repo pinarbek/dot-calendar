@@ -56,9 +56,12 @@ Context for continuing this project. Read this before changing anything.
 - **Month list, note count and legend live in a panel** (`#ovList`), opened by the Notes
   button, sliding in from the right, anchored to the right edge, scrolling on its own. The
   calendar screen keeps only the month, the grid and the logo.
-- **The weekday slot doubles as a note count** on months other than the current one. As a
-  count it takes `.cnt` and is sized like the weekday row (14px desktop, 10px phone), not
-  like the header.
+- **Only the current month names a day (25 Nov 2026).** The header reads `25 KASIM 2026 ·
+  Çar` in the month you are in. In any other month the numeral is hidden and the weekday
+  slot is empty, leaving the month, the year and the orange back-to-today link. The numeral
+  keeps its space (`visibility`, not `display`) so paging through months does not make the
+  grid jump. The note count that used to sit in the weekday slot is gone; the panel carries
+  it. `.cnt` and its styling are now unused.
 - **Logo:** The ola | CREATIVE logo is a white PNG embedded as a CSS mask, so it takes `var(--ink)` and works in both themes. On the calendar screen it sits under the grid; the panel carries its own copy at the bottom.
 - **A day can hold several notes, and the circle advances through the day (agreed 25 Nov
   2026).** One day is still one circle, one colour, one label — it just moves on. A day
