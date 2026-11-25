@@ -90,15 +90,36 @@ async def main():
         for w, h in [(1440, 900), (1440, 1100), (1600, 1000), (1920, 1080), (1000, 1100), (1280, 800)]:
             pg, errs = await page_for(b, base, w, h, seed(lang="en", country="TR"), "january-2027")
             box = await pg.evaluate(
-                "(() => {const g = document.querySelector('#grid').getBoundingClientRect(),"
-                "              s = document.querySelector('.side').getBoundingClientRect();"
-                " return {gap: s.left - g.right, bottom: g.bottom,"
+                "(() => {const g = document.querySelector('#grid').getBoundingClientRect();"
+                " return {bottom: g.bottom,"
                 "         hscroll: document.documentElement.scrollWidth - document.documentElement.clientWidth}})()")
-            check(box["gap"] >= 0, f"grid clears the side list at {w}x{h} (gap {box['gap']:.0f}px)")
             check(box["hscroll"] <= 0, f"no horizontal scroll at {w}x{h}")
             check(box["bottom"] <= h, f"month fits one screen at {w}x{h} (grid bottom {box['bottom']:.0f})")
             check(not errs, f"no script errors at {w}x{h}")
             await pg.context.close()
+
+        print("Month panel")
+        pg, errs = await page_for(b, base, 1440, 900, seed(lang="en", country="ES"), "january-2027")
+        check(not await pg.is_visible("#ovList"), "panel starts closed")
+        check(not await pg.is_visible("#legend"), "legend is not on the calendar screen")
+        await pg.click("#bList")
+        await pg.wait_for_timeout(500)
+        check(await pg.is_visible("#ovList"), "Notes button opens the panel")
+        for sel, what in [("#ul", "month list"), ("#lc", "note count"), ("#legend", "legend"),
+                          ("#todaybar", "next 24 hours")]:
+            check(await pg.is_visible(sel), f"panel holds the {what}")
+        panel = await pg.evaluate(
+            "(() => {const p = document.querySelector('.ov.pan .side');"
+            " return {overflow: getComputedStyle(p).overflowY,"
+            "         fromRight: Math.round(document.documentElement.clientWidth - p.getBoundingClientRect().right),"
+            "         scrollable: p.scrollHeight >= p.clientHeight}})()")
+        check(panel["overflow"] == "auto", "panel scrolls on its own")
+        check(panel["fromRight"] == 0, "panel is anchored to the right edge")
+        await pg.click("#lDone")
+        await pg.wait_for_timeout(400)
+        check(not await pg.is_visible("#ovList"), "close button dismisses the panel")
+        check(not errs, f"no script errors in the panel {errs}")
+        await pg.context.close()
 
         print("Notes and reminders")
         now = datetime.datetime.now()
