@@ -18,8 +18,27 @@ Context for continuing this project. Read this before changing anything.
 - **Palette (owner-supplied, exact hex):** `#ff5a00 #ff9700 #ffcc00 #563cf3 #2495ff #00dbee #f6042e #ff62d7 #febaff #038a6c #7ac841 #a6fe5a`. The owner also wants a free colour picker.
 - **Category defaults:** work `#563cf3`, meeting `#2495ff`, birthday `#ff62d7`, holiday `#f6042e`. Holidays must be **red from the start**.
 - **Calendar range:** Opens on December 2026 (before Dec 2026) and is the "2027 calendar". Navigation is unlimited, plus a month picker.
-- **Layout:** On desktop (≥960px) the whole month must fit one screen without scrolling. The header sits side by side and the dot size is driven by the viewport height (`calc((100vh - 390px) * 1.18)`). Below 960px it is a single column. On phones the stickers show no text (too small), only colour.
-- **Logo:** The ola | CREATIVE logo is a white PNG embedded as a CSS mask, so it takes `var(--ink)` and works in both themes. On desktop it sits bottom-left under the legend. On mobile it sits at the very bottom.
+- **Layout:** One column at every width. On desktop (≥960px) the whole month must fit one
+  screen without scrolling, measured to the lowest element on the page, not just the grid.
+  On phones the stickers show no text (too small), only colour.
+- **Header stays side by side (decided 25 Nov 2026).** The owner's reference showed the
+  stacked header — numeral above, month and year below, weekday right — which is what the
+  narrow layout already does. Offered as A/B/C against measurements: stacking costs about
+  10px of dot diameter at every desktop size, because the header and the grid share the same
+  vertical space. The owner chose **A**, the side-by-side header, so the dots stay largest.
+  Do not re-open this without new reason.
+- **Dot size:** derived from the height actually free, divided by the rows the month needs:
+  `--avail: calc(100vh - 235px - 18.5vh)`, `--dot: (--avail - (--rows - 1) * --gap) / --rows`,
+  sheet width `7 * --dot + 6 * --gap`. `--rows` is set by `render()`. The 235px + 18.5vh
+  reserve was measured across eight windows (186px + 17.4vh) plus a margin. Dots land at
+  90-148px on four-row months, 70-138px on five-row, 57-138px on six-row.
+- **Month list, note count and legend live in a panel** (`#ovList`), opened by the Notes
+  button, sliding in from the right, anchored to the right edge, scrolling on its own. The
+  calendar screen keeps only the month, the grid and the logo.
+- **The weekday slot doubles as a note count** on months other than the current one. As a
+  count it takes `.cnt` and is sized like the weekday row (14px desktop, 10px phone), not
+  like the header.
+- **Logo:** The ola | CREATIVE logo is a white PNG embedded as a CSS mask, so it takes `var(--ink)` and works in both themes. On the calendar screen it sits under the grid; the panel carries its own copy at the bottom.
 - **Rejected directions:** AI-illustrated monthly scenes, and a giant-month-word poster. Both are in `archive/` for reference only.
 - **Never copy third-party artwork:** The owner once asked to feed other artists' images to an image model as references. That was declined: describe styles in words instead.
 
