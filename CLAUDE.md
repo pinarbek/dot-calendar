@@ -11,6 +11,9 @@ Context for continuing this project. Read this before changing anything.
 
 - **Visual language:** It combines two references:
   1. A Dieter Rams-style minimal calendar: warm grey paper `#e8e6e1`, a huge date numeral, the month name in caps, the year in grey, the weekday on the right, and a dot grid where past days are filled ink, upcoming days are empty rings, and today is orange `#f26b21`.
+     Past days stay **filled ink**: re-confirmed 25 Nov 2026 after the dots grew to 96px,
+     when a mostly-past month reads much heavier. Softer grey and ring-only were shown as
+     alternatives and declined.
   2. A bold "content calendar" sticker look: each note is a colour circle the same size as the day, offset about 22% down and right, with small uppercase text inside. The day under it turns into a thin outlined ring.
 - **Animation:** A note sticker fully covers its day, hiding the number, until that day arrives. On load, today's sticker slides off with a small anticipation bounce (`@keyframes uncover`). Past notes stay slid off. Hovering a future note peeks at it.
 - **Typography:** Archivo (Google Fonts, variable `wdth 62–125`) everywhere. Labels, buttons and headings use expanded caps (`font-stretch:125%`). Note text in the list and in the textarea stays at normal width for readability.
@@ -64,6 +67,9 @@ Context for continuing this project. Read this before changing anything.
   - Static elements use `data-i18n`, `data-i18n-ph` and `data-i18n-html`. `applyI18n()` refreshes everything.
   - **Every new UI string must be added to all four languages.**
 - **Holidays:**
+  - `guessCC()` picks the country from the **timezone first**, language second. Someone
+    living abroad keeps their own language, so language alone is the wrong signal; it only
+    chooses between ES and CAT, and stands in when the timezone matches nothing.
   - `holidays(year, cc)` returns `{ "YYYY-MM-DD": {ids:[...], kind:"off"|"half"|"fun"} }`, with a lazy `name` getter.
   - Country codes are `TR ES CAT GB DE US`.
   - Ids may carry `:n` (the feast day number) or `:sub` (a substitute day).

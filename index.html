@@ -535,8 +535,18 @@ async function saveFile(filename,data,type){
 }
 const $=id=>document.getElementById(id);
 const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+// Where the device is beats what language it speaks: someone living abroad keeps their own
+// language, and the holidays they need are the ones around them. Language only decides
+// between Spain and Catalonia, and stands in when the timezone says nothing.
 const guessCC=()=>{let tz="";try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}const L=(navigator.language||"").toLowerCase();
-  if(tz==="Europe/Istanbul"||L.startsWith("tr"))return"TR";if(L.startsWith("ca"))return"CAT";if(tz==="Europe/Madrid"||tz==="Atlantic/Canary"||L.startsWith("es"))return"ES";if(tz==="Europe/London"||L==="en-gb")return"GB";if(tz==="Europe/Berlin"||L.startsWith("de"))return"DE";if(tz.startsWith("America/")||L==="en-us")return"US";return"TR"};
+  if(tz==="Europe/Istanbul")return"TR";
+  if(tz==="Europe/Madrid"||tz==="Atlantic/Canary")return L.startsWith("ca")?"CAT":"ES";
+  if(tz==="Europe/London")return"GB";
+  if(tz==="Europe/Berlin")return"DE";
+  if(tz.startsWith("America/"))return"US";
+  if(L.startsWith("tr"))return"TR";if(L.startsWith("ca"))return"CAT";if(L.startsWith("es"))return"ES";
+  if(L==="en-gb")return"GB";if(L.startsWith("de"))return"DE";if(L==="en-us")return"US";
+  return"TR"};
 let store={notes:{},weekStart:1,country:guessCC(),fired:{},theme:"light",sound:true,catCol:{},lang:guessLang()};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.notes)store=Object.assign(store,s)}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
