@@ -47,6 +47,12 @@ Context for continuing this project. Read this before changing anything.
   count it takes `.cnt` and is sized like the weekday row (14px desktop, 10px phone), not
   like the header.
 - **Logo:** The ola | CREATIVE logo is a white PNG embedded as a CSS mask, so it takes `var(--ink)` and works in both themes. On the calendar screen it sits under the grid; the panel carries its own copy at the bottom.
+- **A note moves by dragging its sticker onto another day.** Mouse drags after 7px; a
+  finger must hold still for 300ms first, so the month swipe and page scrolling still work
+  (a finger that travels early is treated as a swipe). Dropping on a day that already has a
+  note **swaps** the two, so nothing is ever lost. Reminder state (`fired`) travels with the
+  note. Holiday stickers are not draggable. `skipClick` suppresses the click that follows a
+  drop and expires after 350ms — a sticky flag swallowed the next real tap.
 - **Reminders stay local; no push when the app is closed (decided 25 Nov 2026).** Asked
   directly whether notifications should arrive with the app fully closed, the owner said no.
   So the three paths stay as they are: a pop-up and chime while the app is open (`tick()`

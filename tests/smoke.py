@@ -131,6 +131,84 @@ async def main():
         check(not errs, f"no script errors in the panel {errs}")
         await pg.context.close()
 
+        print("Moving notes by dragging")
+        # A mouse drags straight away; a finger must hold still for 300ms first, so that the
+        # month swipe and page scrolling keep working. Both paths are checked here.
+        async def day_box(pg, k):
+            return await (await pg.query_selector(f'[data-k="{k}"]')).bounding_box()
+
+        pg, errs = await page_for(b, base, 1280, 900, seed(lang="en", country="ES"), "january-2027")
+        src, dst = await day_box(pg, "2027-01-14"), await day_box(pg, "2027-01-21")
+        await pg.mouse.move(src["x"] + src["width"] / 2, src["y"] + src["height"] / 2)
+        await pg.mouse.down()
+        await pg.mouse.move(src["x"] + src["width"] / 2 + 30, src["y"] + src["height"] / 2, steps=4)
+        await pg.mouse.move(dst["x"] + dst["width"] / 2, dst["y"] + dst["height"] / 2, steps=10)
+        await pg.mouse.up()
+        await pg.wait_for_timeout(600)
+        kept = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes")
+        check("2027-01-14" not in kept, "dragging a note empties the day it left")
+        check(kept.get("2027-01-21", {}).get("t") == "Release review", "the note lands on the new day")
+        check(not await pg.is_visible("#ovNote"), "a drag does not open the note editor")
+
+        src, dst = await day_box(pg, "2027-01-21"), await day_box(pg, "2027-01-05")
+        await pg.mouse.move(src["x"] + src["width"] / 2, src["y"] + src["height"] / 2)
+        await pg.mouse.down()
+        await pg.mouse.move(src["x"] + src["width"] / 2 + 30, src["y"] + src["height"] / 2, steps=4)
+        await pg.mouse.move(dst["x"] + dst["width"] / 2, dst["y"] + dst["height"] / 2, steps=10)
+        await pg.mouse.up()
+        await pg.wait_for_timeout(600)
+        both = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes")
+        check(both.get("2027-01-05", {}).get("t") == "Release review"
+              and both.get("2027-01-21", {}).get("t") == "Team meeting",
+              "dropping onto a day that already has a note swaps them, losing neither")
+
+        await pg.click('[data-k="2027-01-05"]')
+        await pg.wait_for_timeout(400)
+        check(await pg.is_visible("#ovNote"), "a plain click still opens the note editor")
+        check(not errs, f"no script errors while dragging {errs}")
+        await pg.context.close()
+
+        touch = await b.new_context(viewport={"width": 390, "height": 844}, has_touch=True,
+                                    is_mobile=True, timezone_id="Europe/Madrid")
+        tpg = await touch.new_page()
+        terrs = []
+        tpg.on("pageerror", lambda e: terrs.append(str(e)))
+        await tpg.goto(base + "index.html")
+        await tpg.evaluate(seed(lang="en", country="ES"))
+        await tpg.goto(base + "index.html#january-2027")
+        await tpg.reload()
+        await tpg.wait_for_timeout(900)
+        gesture = """([ax, ay, bx, by, hold, from]) => new Promise(done => {
+          const sheet = document.getElementById('sheet');
+          const src = document.querySelector(`[data-k="${from}"]`);
+          const fire = (type, x, y, el) => (el || sheet).dispatchEvent(new PointerEvent(type,
+            {bubbles: true, cancelable: true, pointerId: 7, pointerType: 'touch',
+             isPrimary: true, clientX: x, clientY: y, button: 0}));
+          fire('pointerdown', ax, ay, src);
+          setTimeout(() => {
+            let i = 0;
+            const step = () => { i++;
+              fire('pointermove', ax + (bx - ax) * i / 10, ay + (by - ay) * i / 10);
+              if (i < 10) setTimeout(step, 16); else { fire('pointerup', bx, by); setTimeout(() => done(1), 400) }};
+            step();
+          }, hold);
+        })"""
+        for hold, should_move, what in [(420, True, "a 420ms hold then a drag moves the note"),
+                                        (80, False, "a quick swipe does not move it, it changes month")]:
+            await tpg.goto(base + "index.html#january-2027")
+            await tpg.evaluate(seed(lang="en", country="ES"))
+            await tpg.reload()
+            await tpg.wait_for_timeout(900)
+            a = await (await tpg.query_selector('[data-k="2027-01-14"]')).bounding_box()
+            c = await (await tpg.query_selector('[data-k="2027-01-21"]')).bounding_box()
+            await tpg.evaluate(gesture, [a["x"] + a["width"] / 2, a["y"] + a["height"] / 2,
+                                         c["x"] + c["width"] / 2, c["y"] + c["height"] / 2,
+                                         hold, "2027-01-14"])
+            now = await tpg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes")
+            check(("2027-01-21" in now) == should_move, what)
+        check(not terrs, f"no script errors on touch {terrs}")
+        await touch.close()
+
         print("Notes and reminders")
         now = datetime.datetime.now()
         k = now.strftime("%Y-%m-%d")

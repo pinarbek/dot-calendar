@@ -31,6 +31,8 @@ optimistic. "Finalised" means the checklist under *Before the custom domain* is 
 - [x] Smoke test hardened: measures the lowest element rather than the grid, covers
       four-, five- and six-row months across nine window sizes. 147 checks
 
+- [x] A note can be moved to another day by dragging its sticker, on mouse and on touch
+
 ## Before the custom domain
 
 Device coverage is the gap. The owner's rule is iOS **and** Android, phone **and** tablet.
