@@ -43,6 +43,27 @@ Context for continuing this project. Read this before changing anything.
 - **Settings:** backup/restore, theme, language, category colours, week start, holiday country, sound, notifications, print.
 - **Environment detection:** `inFrame` is true inside the claude.ai artifact viewer, where downloads go through `claude.use("downloads")`; print, Web Share and the service worker are off there. Standalone hosting uses normal browser APIs.
 
+## Where the project lives (keep all three in step)
+
+- **Working copy:** `~/Desktop/Capcut_2026/dot-calendar`
+- **GitHub:** https://github.com/pinarbek/dot-calendar (public, `main`)
+- **NAS backup:** `/Volumes/PROJECTS/olaCreative/dot-calendar` (SMB forces mode 0755, so the
+  backup has `core.fileMode false`; contents are identical)
+- **Live site:** https://pinarbek.github.io/dot-calendar/ — GitHub Pages, `main` / root.
+  A push to `main` redeploys it.
+
+After any change: commit and push, then `rsync -a --delete --exclude .DS_Store
+--exclude tests/output` the folder to the NAS. Three copies that disagree is worse than one.
+
+## Tooling on this machine
+
+- `gh` is installed at `~/.local/bin/gh` (not on PATH by default; add
+  `export PATH="$HOME/.local/bin:$PATH"` to `~/.zshrc`). Logged in as `pinarbek`.
+- Playwright is **not** installed system-wide. The smoke test needs a virtualenv:
+  `python3 -m venv venv && venv/bin/pip install playwright && venv/bin/playwright install chromium`,
+  then `venv/bin/python tests/smoke.py`.
+- No Homebrew on this machine.
+
 ## Conventions
 
 - Keep it a single dependency-free `index.html`. Only Google Fonts load from outside.

@@ -168,8 +168,8 @@ body{font-family:Archivo,"Inter Tight",system-ui,sans-serif}
   .dows div{padding-bottom:clamp(4px,1vh,12px)}
   .grid{padding-bottom:clamp(14px,2.6vh,30px)}
   .side{top:clamp(16px,3vh,36px)}
-  .app{grid-template-columns:minmax(0,auto) minmax(300px,420px);justify-content:center;column-gap:clamp(40px,5vw,96px)}
-  #sheet{width:max(470px,calc((100vh - 390px) * 1.18));max-width:calc(100vw - 420px - 12vw)}
+  .app{grid-template-columns:minmax(0,1fr) minmax(300px,420px);justify-content:stretch;column-gap:clamp(40px,5vw,96px)}
+  #sheet{width:max(470px,calc((100vh - 390px) * 1.18));max-width:100%;margin-inline:auto}
   .dows,.grid{max-width:none}
   .mo .w{white-space:nowrap;font-size:clamp(15px,2.4vh,24px)!important;padding-left:12px}
 }

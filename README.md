@@ -61,13 +61,29 @@ The test writes screenshots to `tests/output/` and fails if the page throws a sc
 
 ## Publish (free)
 
-**Netlify Drop (fastest):** Open https://app.netlify.com/drop and drag this folder onto the page. You get a public link straight away.
+The site is live on GitHub Pages, served from the `main` branch, root folder:
 
-**Netlify + GitHub:** Push this repo to GitHub, then in Netlify choose "Add new site → Import from Git". Every push redeploys the site.
+**https://pinarbek.github.io/dot-calendar/**
 
-**GitHub Pages:** Go to the repo's Settings → Pages, and set it to deploy from the `main` branch, root folder.
+Every push to `main` redeploys it, normally within a minute. HTTPS is enforced, so the
+service worker and "Add to Home Screen" work as they do on any other host.
 
-After publishing, people open the link and choose Install (computer) or Add to Home Screen (phone).
+Repository: https://github.com/pinarbek/dot-calendar (public)
+
+People open the link and choose Install (computer) or Add to Home Screen (phone).
+
+### Custom domain (planned, not set up yet)
+
+When the project is finalised it moves to a subdomain of `olacreative.es`. DNS for that
+domain is on Cloudflare, and two steps are needed:
+
+1. Cloudflare → DNS → add `CNAME  <name>  →  pinarbek.github.io`, with proxy set to
+   **DNS only** (grey cloud). An orange cloud breaks GitHub's certificate check.
+2. In this repo, add a `CNAME` file holding the full hostname, set the custom domain under
+   Settings → Pages, wait for the Let's Encrypt certificate, then enable Enforce HTTPS.
+
+`manifest.webmanifest` and `sw.js` use relative paths (`./`), so the app works both in the
+`/dot-calendar/` subfolder and at a domain root. No path changes are needed for the move.
 
 ## Data
 

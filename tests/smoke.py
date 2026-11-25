@@ -84,6 +84,22 @@ async def main():
             await pg.screenshot(path=str(OUT / f"theme-{theme}-{w}.png"), full_page=True)
             await pg.context.close()
 
+        print("Desktop widths and heights")
+        # The sheet width is driven by viewport height. On a tall window it used to outgrow its
+        # own grid column and sit on top of the side list, so check the gap, not just the height.
+        for w, h in [(1440, 900), (1440, 1100), (1600, 1000), (1920, 1080), (1000, 1100), (1280, 800)]:
+            pg, errs = await page_for(b, base, w, h, seed(lang="en", country="TR"), "january-2027")
+            box = await pg.evaluate(
+                "(() => {const g = document.querySelector('#grid').getBoundingClientRect(),"
+                "              s = document.querySelector('.side').getBoundingClientRect();"
+                " return {gap: s.left - g.right, bottom: g.bottom,"
+                "         hscroll: document.documentElement.scrollWidth - document.documentElement.clientWidth}})()")
+            check(box["gap"] >= 0, f"grid clears the side list at {w}x{h} (gap {box['gap']:.0f}px)")
+            check(box["hscroll"] <= 0, f"no horizontal scroll at {w}x{h}")
+            check(box["bottom"] <= h, f"month fits one screen at {w}x{h} (grid bottom {box['bottom']:.0f})")
+            check(not errs, f"no script errors at {w}x{h}")
+            await pg.context.close()
+
         print("Notes and reminders")
         now = datetime.datetime.now()
         k = now.strftime("%Y-%m-%d")
