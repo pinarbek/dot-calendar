@@ -18,6 +18,8 @@ optimistic. "Finalised" means the checklist under *Before the custom domain* is 
 - [x] Live deployment verified in a real browser: 35 day dots, service worker registered,
       manifest and icons served, no script errors
 - [x] NAS backup at `/Volumes/PROJECTS/olaCreative/dot-calendar`
+- [x] Desktop layout bounded by its own column, so a tall window no longer puts the grid
+      on top of the side list; smoke test now covers six desktop viewports (52 checks)
 
 ## Before the custom domain
 
