@@ -29,6 +29,13 @@ def serve():
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     return srv, f"http://127.0.0.1:{srv.server_address[1]}/"
 
+def first(notes, k):
+    """The day's first note. Days hold a list now; old backups held a single object."""
+    v = notes.get(k)
+    if isinstance(v, list):
+        return v[0] if v else {}
+    return v or {}
+
 def seed(**extra):
     notes = {
         "2027-01-05": {"t": "Team meeting", "c": -1, "cat": "meeting", "r": "10:00"},
@@ -131,6 +138,18 @@ async def main():
         check(not errs, f"no script errors in the panel {errs}")
         await pg.context.close()
 
+        print("Upgrading old data")
+        # Every seed in this file is written in the pre-list shape, the one real backups on
+        # the owner's devices hold. Loading has to convert it without losing anything.
+        pg, errs = await page_for(b, base, 1280, 900, seed(lang="en", country="TR"), "january-2027")
+        shape = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes")
+        check(all(isinstance(v, list) for v in shape.values()), "every day became a list of notes")
+        check(all(n.get("id") for v in shape.values() for n in v), "every note was given an id")
+        check(first(shape, "2027-01-05").get("t") == "Team meeting"
+              and first(shape, "2027-01-05").get("r") == "10:00", "the note itself came through intact")
+        check(first(shape, "2027-05-14").get("w") == 1, "reminder settings came through")
+        await pg.context.close()
+
         print("Moving notes by dragging")
         # A mouse drags straight away; a finger must hold still for 300ms first, so that the
         # month swipe and page scrolling keep working. Both paths are checked here.
@@ -147,7 +166,7 @@ async def main():
         await pg.wait_for_timeout(600)
         kept = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes")
         check("2027-01-14" not in kept, "dragging a note empties the day it left")
-        check(kept.get("2027-01-21", {}).get("t") == "Release review", "the note lands on the new day")
+        check(first(kept, "2027-01-21").get("t") == "Release review", "the note lands on the new day")
         check(not await pg.is_visible("#ovNote"), "a drag does not open the note editor")
 
         src, dst = await day_box(pg, "2027-01-21"), await day_box(pg, "2027-01-05")
@@ -158,8 +177,8 @@ async def main():
         await pg.mouse.up()
         await pg.wait_for_timeout(600)
         both = await pg.evaluate("JSON.parse(localStorage.getItem('desklife-cal-v1')).notes")
-        check(both.get("2027-01-05", {}).get("t") == "Release review"
-              and both.get("2027-01-21", {}).get("t") == "Team meeting",
+        check(first(both, "2027-01-05").get("t") == "Release review"
+              and first(both, "2027-01-21").get("t") == "Team meeting",
               "dropping onto a day that already has a note swaps them, losing neither")
 
         await pg.click('[data-k="2027-01-05"]')
@@ -225,7 +244,8 @@ async def main():
         await pg.click('#cats [data-cat="work"]')
         await pg.click("#nDone")
         saved = await pg.evaluate(f"JSON.parse(localStorage.getItem('desklife-cal-v1')).notes['{k}']")
-        check(saved.get("cat") == "work" and saved.get("t") == "Quarterly report", "editing a note saves text and category")
+        one = saved[0] if isinstance(saved, list) else saved
+        check(one.get("cat") == "work" and one.get("t") == "Quarterly report", "editing a note saves text and category")
         check(not errs, f"no script errors in note flow {errs}")
         await pg.context.close()
         await b.close()

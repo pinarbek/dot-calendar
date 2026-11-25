@@ -555,6 +555,32 @@ const guessCC=()=>{let tz="";try{tz=Intl.DateTimeFormat().resolvedOptions().time
 let store={notes:{},weekStart:1,country:guessCC(),fired:{},theme:"light",sound:true,catCol:{},lang:guessLang()};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&s.notes)store=Object.assign(store,s)}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+
+/* ---- a day holds a list of notes ----
+   store.notes[dayKey] is an array. Each note carries its own id, and store.fired is keyed
+   by that id, so reminders survive notes being reordered, moved or deleted. Backups written
+   before this change hold a single object per day; migrate() and restore() both accept it. */
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const sortDay=a=>a.sort((x,y)=>(x.r?1:0)-(y.r?1:0)||String(x.r||"").localeCompare(String(y.r||"")));
+const dayNotes=k=>store.notes[k]||[];
+const putDay=(k,a)=>{if(a&&a.length)store.notes[k]=sortDay(a);else delete store.notes[k]};
+const noteById=(k,id)=>dayNotes(k).find(n=>n.id===id);
+const allNotes=()=>{const o=[];for(const k of Object.keys(store.notes))for(const n of dayNotes(k))o.push([k,n]);return o};
+const countNotes=pre=>Object.keys(store.notes).filter(k=>k.startsWith(pre)).reduce((a,k)=>a+dayNotes(k).length,0);
+/* Which of the day's notes the circle shows. Step one: the first. */
+const shownNote=k=>dayNotes(k)[0];
+function migrate(){
+  let touched=false;
+  for(const[k,v]of Object.entries(store.notes)){
+    if(Array.isArray(v)){let f=false;for(const n of v)if(!n.id){n.id=nid();f=true}if(f)touched=true;continue}
+    if(!v||typeof v!=="object"){delete store.notes[k];touched=true;continue}
+    const n={...v,id:nid()};store.notes[k]=[n];
+    if(store.fired[k]!==undefined){store.fired[n.id]=store.fired[k];delete store.fired[k]}
+    touched=true;
+  }
+  if(touched)save();
+}
+migrate();
 let now=new Date();
 let Y=now.getFullYear(),M=now.getMonth();if(Y<2026||(Y===2026&&M<11)){Y=2026;M=11}
 const pad=n=>String(n).padStart(2,"0");
@@ -574,7 +600,7 @@ function render(anim){
   const cells=Math.ceil((lead+dim)/7)*7,tk=key(now.getFullYear(),now.getMonth(),now.getDate());
   let h="";
   for(let c=0;c<cells;c++){
-    const d=new Date(Y,M,c-lead+1),k=key(d.getFullYear(),d.getMonth(),d.getDate()),n=store.notes[k];
+    const d=new Date(Y,M,c-lead+1),k=key(d.getFullYear(),d.getMonth(),d.getDate()),n=shownNote(k);
     if(d.getMonth()!==M){h+=`<div class="day out" aria-hidden="true"></div>`;continue}
     const hol=holOf(k),off=hol&&hol.kind!=="fun";
     const wk=d.getDay()===0;
@@ -588,10 +614,10 @@ function render(anim){
   const pre=`${Y}-${pad(M+1)}-`,H=holidays(Y,store.country);
   const items=[...new Set([...Object.keys(store.notes),...Object.keys(H)])].filter(k=>k.startsWith(pre)).sort();
   $("lh").textContent=`${monthName(M)} ${Y}`;
-  const nc=items.filter(k=>store.notes[k]).length;$("lc").textContent=nc?nNotes(nc):"";
+  const nc=items.reduce((a,k)=>a+dayNotes(k).length,0);$("lc").textContent=nc?nNotes(nc):"";
   $("wd").textContent=isCur?WD3[lang()][tday.getDay()]:(nc?nNotes(nc):"");
   $("wd").className=isCur?"w":"w cnt";
-  $("ul").innerHTML=items.length?items.map(k=>{const n=store.notes[k],hol=H[k],hc=!n&&hol&&hol.kind!=="fun",col=n?colorOf(k,n):hc?catCol("holiday"):"";
+  $("ul").innerHTML=items.length?items.map(k=>{const n=shownNote(k),hol=H[k],hc=!n&&hol&&hol.kind!=="fun",col=n?colorOf(k,n):hc?catCol("holiday"):"";
     return `<li><button data-k="${k}"><span class="dd${n||hc?" c":""}" ${n||hc?`style="--c:${col};--sc:${ink(col)}"`:""}>${+k.slice(8)}</span><span class="tx">${hol?`<small class="${hol.kind==="fun"?"f":""}">${esc(hol.name)}${hol.kind==="off"?" · "+t("publicHol"):""}</small>`:""}${n&&n.cat?`<small class="w" style="--c:${col};--sc:${ink(col)}">${esc(catName(n.cat))}</small>`:""}${n?(n.r?`<b>${esc(n.r)}${n.w>0?` (${t(n.w===1?"before1d":"before1w")})`:""}</b> · `:"")+esc(n.t):""}</span></button></li>`}).join(""):`<div class="empty">${esc(t("empty"))}</div>`;
   renderToday();
   if(anim){const g=$("grid");g.classList.remove("in");void g.offsetWidth;g.classList.add("in")}
@@ -601,14 +627,14 @@ const go=d=>{M+=d;if(M<0){M=11;Y--}if(M>11){M=0;Y++}render(true)};
 const fromHash=()=>{const m=/^#([a-z]+)-(\d{4})$/.exec(location.hash);if(m){const i=MONTHS_EN.findIndex(x=>x.toLowerCase()===m[1]);if(i>=0){M=i;Y=+m[2]}}};
 
 /* note editor */
-let cur=null,curC=-1,curCat="",curHex="";
+let cur=null,curId=null,curC=-1,curCat="",curHex="";
 $("dots").innerHTML=`<button data-c="-1" style="--c:conic-gradient(${NOTECOL.join(",")},${NOTECOL[0]})" aria-label="${t("autoColour")}" title="${t("autoColour")}"></button>`+NOTECOL.map((c,i)=>`<button data-c="${i}" style="--c:${c}" aria-label="Colour ${i+1}"></button>`).join("");
 const renderCats=()=>{document.querySelectorAll("#cats [data-cat]").forEach(b=>b.remove());$("cats").insertAdjacentHTML("beforeend",CATS.map(([id,nm])=>`<button class="btn" data-cat="${id}">${t(nm)}</button>`).join(""))};renderCats();
 const setDots=()=>{document.querySelectorAll("#dots button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.c===curC));
   document.querySelectorAll("#cats [data-cat]").forEach(b=>{const id=b.dataset.cat,c=id?catCol(id):"#151515";b.style.setProperty("--c",id?c:"var(--ink)");b.style.setProperty("--sc",id?ink(c):"var(--bg)");b.setAttribute("aria-pressed",curCat===id)});
   $("dots").style.visibility=curCat?"hidden":"visible";$("nHex").closest(".cpick").style.visibility=curCat?"hidden":"visible";$("nHex").closest(".cpick").classList.toggle("on",!!curHex)};
 function openNote(k){
-  cur=k;const [y,m,d]=k.split("-").map(Number),dt=new Date(y,m-1,d),n=store.notes[k];
+  cur=k;const [y,m,d]=k.split("-").map(Number),dt=new Date(y,m-1,d),n=shownNote(k);curId=n?n.id:null;
   $("nTitle").textContent=fmtLong(dt);
   $("nText").value=n?n.t:"";curC=n?(Number.isInteger(n.c)?n.c:-1):-1;curHex=n&&n.hex||"";if(curHex)$("nHex").value=curHex;curCat=n&&n.cat||"";setDots();
   const hol=holOf(k);$("nSub").textContent=hol?hol.name+(hol.kind==="off"?" · "+t("publicHol"):""):t("saved");
@@ -619,10 +645,16 @@ function openNote(k){
 const syncRem=()=>$("rOn").closest(".remind").classList.toggle("on",$("rOn").checked);
 function commit(){
   if(!cur)return;const tx=$("nText").value.replace(/\s+$/,""),r=$("rOn").checked?$("rTime").value||"09:00":"",w=+$("rWhen").value||0;
-  const old=store.notes[cur];
-  if(tx||r){store.notes[cur]={t:tx||t("reminder"),c:curC};if(curHex&&!curCat)store.notes[cur].hex=curHex;if(curCat)store.notes[cur].cat=curCat;if(r){store.notes[cur].r=r;store.notes[cur].w=w}
-    if(old&&(old.r!==r||old.w!==w))delete store.fired[cur]}
-  else delete store.notes[cur];save();
+  const list=dayNotes(cur).slice(),at=curId?list.findIndex(n=>n.id===curId):-1,old=at>=0?list[at]:null;
+  if(tx||r){
+    const n={id:old?old.id:(curId=nid()),t:tx||t("reminder"),c:curC};
+    if(curHex&&!curCat)n.hex=curHex;
+    if(curCat)n.cat=curCat;
+    if(r){n.r=r;n.w=w}
+    if(at>=0)list[at]=n;else list.push(n);
+    if(old&&(old.r!==r||old.w!==w))delete store.fired[n.id];
+  }else if(at>=0){delete store.fired[old.id];list.splice(at,1);curId=null}
+  putDay(cur,list);save();
 }
 $("rOn").onchange=()=>{syncRem();commit();if($("rOn").checked)askNotif(false)};
 $("rTime").onchange=commit;$("rWhen").onchange=commit;
@@ -636,8 +668,8 @@ function icsFor(list){
     return ["BEGIN:VEVENT",`UID:${k}-${n.r.replace(":","")}@desklife-calendar`,`DTSTAMP:${st}`,`DTSTART:${f(s)}`,`DTEND:${f(en)}`,`SUMMARY:${e(n.t.split("\n")[0].slice(0,120))}`,`DESCRIPTION:${e(n.t)}`,...(n.cat?["CATEGORIES:"+catName(n.cat).toUpperCase()]:[]),"BEGIN:VALARM","ACTION:DISPLAY",`DESCRIPTION:${e(n.t.split("\n")[0])}`,`TRIGGER:${n.w?`-P${n.w}D`:"-PT0M"}`,"END:VALARM","END:VEVENT"].join("\r\n")});
   return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Dot Calendar//EN","CALSCALE:GREGORIAN",...ev,"END:VCALENDAR"].join("\r\n")+"\r\n";
 }
-$("rIcs").onclick=async()=>{commit();const n=store.notes[cur];if(!n||!n.r)return;if(await saveFile(`reminder-${cur}.ics`,icsFor([[cur,n]]),"text/calendar"))toast(t("tOpenIcs"))};
-$("bAllIcs").onclick=async()=>{const nowT=Date.now(),l=Object.entries(store.notes).filter(([k,n])=>n.r&&fireAt(k,n).getTime()>nowT).sort();
+$("rIcs").onclick=async()=>{commit();const n=noteById(cur,curId);if(!n||!n.r)return;if(await saveFile(`reminder-${cur}.ics`,icsFor([[cur,n]]),"text/calendar"))toast(t("tOpenIcs"))};
+$("bAllIcs").onclick=async()=>{const nowT=Date.now(),l=allNotes().filter(([k,n])=>n.r&&fireAt(k,n).getTime()>nowT).sort((a,b)=>fireAt(...a)-fireAt(...b));
   if(!l.length){toast(t("tNoUp"));return}
   if(await saveFile("calendar-reminders.ics",icsFor(l),"text/calendar"))toast(t("tReady",{n:l.length}))};
 const canNotif=()=>!inFrame&&"Notification" in window;
@@ -675,15 +707,15 @@ $("remOpen").onclick=()=>{const k=remQ[0][0];nextRem();Y=+k.slice(0,4);M=+k.slic
 let lastDay=new Date().toDateString();
 function tick(){
   const nowT=Date.now();let ch=false;
-  for(const[k,n]of Object.entries(store.notes)){if(!n.r)continue;const fa=fireAt(k,n).getTime(),id=k+"@"+n.r+"/"+(n.w||0);
-    if(fa<=nowT&&nowT-fa<36*36e5&&store.fired[k]!==id){store.fired[k]=id;ch=true;remQ.push([k,n]);
+  for(const[k,n]of allNotes()){if(!n.r)continue;const fa=fireAt(k,n).getTime(),id=k+"@"+n.r+"/"+(n.w||0);
+    if(fa<=nowT&&nowT-fa<36*36e5&&store.fired[n.id]!==id){store.fired[n.id]=id;ch=true;remQ.push([k,n]);
       if(canNotif()&&Notification.permission==="granted"){try{new Notification(`${t("reminder")} · ${n.r}`,{body:n.t,tag:id,icon:"icons/icon-192.png"})}catch(e){}}}}
   if(ch){save();showRem()}
   if(new Date().toDateString()!==lastDay){lastDay=new Date().toDateString();now=new Date();revealSoon()}else renderToday();
 }
 function renderToday(){
   const d=new Date();
-  const nowT=d.getTime(),up=Object.entries(store.notes).filter(([k,n])=>n.r&&fireAt(k,n).getTime()>=nowT&&fireAt(k,n).getTime()-nowT<24*36e5).sort((a,b)=>fireAt(...a)-fireAt(...b));
+  const nowT=d.getTime(),up=allNotes().filter(([k,n])=>n.r&&fireAt(k,n).getTime()>=nowT&&fireAt(k,n).getTime()-nowT<24*36e5).sort((a,b)=>fireAt(...a)-fireAt(...b));
   $("tbRem").textContent=up.length?`${up[0][1].r} · ${up[0][1].t.split("\n")[0].slice(0,40)}${up.length>1?"  "+t("more",{n:up.length-1}):""}`:t("noRem");
   $("todaybar").setAttribute("aria-label",`${fmtLong(d)}. ${t("next24")}: ${$("tbRem").textContent}`);
 }
@@ -740,19 +772,19 @@ function endDrag(drop){
   document.body.classList.remove("dragmode");drag=null;
   skipClick=true;setTimeout(()=>{skipClick=false},350);
   if(!to)return;
-  const moving=store.notes[from],there=store.notes[to];
-  store.notes[to]=moving;
-  if(there)store.notes[from]=there;else delete store.notes[from];   // swap, so no note is ever lost
-  const fFrom=store.fired[from],fTo=store.fired[to];
-  if(fFrom!==undefined){store.fired[to]=fFrom;delete store.fired[from]}
-  if(fTo!==undefined&&there)store.fired[from]=fTo;
+  const moving=shownNote(from),there=shownNote(to);
+  if(!moving)return;
+  const fromList=dayNotes(from).filter(n=>n!==moving),toList=dayNotes(to).filter(n=>n!==there);
+  toList.push(moving);
+  if(there)fromList.push(there);            // swap the two shown notes, so neither is lost
+  putDay(from,fromList);putDay(to,toList);
   save();render(false);
   toast(t(there?"tSwapped":"tMoved",{d:fmtLong(dateOf(to))}));
 }
 sh.addEventListener("pointerdown",e=>{
   if(e.pointerType==="mouse"&&e.button!==0)return;
   const c=e.target.closest(".day[data-k]");
-  if(!c||!store.notes[c.dataset.k])return;        // only a real note moves, never a holiday
+  if(!c||!shownNote(c.dataset.k))return;          // only a real note moves, never a holiday
   clearPend();
   pend={c,x:e.clientX,y:e.clientY,id:e.pointerId,timer:null};
   if(e.pointerType!=="mouse"){const q=pend;q.timer=setTimeout(()=>{if(pend===q){beginDrag(q.c,q.x,q.y,q.id);clearPend()}},300)}
@@ -775,7 +807,19 @@ sh.addEventListener("touchend",e=>{if(drag){sx=null;return}if(sx===null)return;c
 const backup=()=>JSON.stringify({app:"desk-life-calendar",v:1,saved:new Date().toISOString(),notes:store.notes});
 function restore(txt){
   try{const o=JSON.parse(txt.trim());if(!o||typeof o.notes!=="object")throw 0;
-    let n=0;for(const[k,v]of Object.entries(o.notes)){if(/^\d{4}-\d\d-\d\d$/.test(k)&&v&&typeof v.t==="string"){store.notes[k]={t:v.t.slice(0,5000),c:Number.isInteger(v.c)&&v.c>=-1&&v.c<12?v.c:-1};if(CATDEF[v.cat])store.notes[k].cat=v.cat;if(/^#[0-9a-f]{6}$/i.test(v.hex||""))store.notes[k].hex=v.hex;if(/^\d\d:\d\d$/.test(v.r||"")){store.notes[k].r=v.r;store.notes[k].w=[0,1,7].includes(+v.w)?+v.w:0}n++}}
+    let n=0;
+    const clean=v=>{if(!v||typeof v.t!=="string")return null;
+      const o2={id:nid(),t:v.t.slice(0,5000),c:Number.isInteger(v.c)&&v.c>=-1&&v.c<12?v.c:-1};
+      if(CATDEF[v.cat])o2.cat=v.cat;
+      if(/^#[0-9a-f]{6}$/i.test(v.hex||""))o2.hex=v.hex;
+      if(/^\d\d:\d\d$/.test(v.r||"")){o2.r=v.r;o2.w=[0,1,7].includes(+v.w)?+v.w:0}
+      return o2};
+    for(const[k,v]of Object.entries(o.notes)){
+      if(!/^\d{4}-\d\d-\d\d$/.test(k))continue;
+      const add=(Array.isArray(v)?v:[v]).map(clean).filter(Boolean);   // old backups hold one object
+      if(!add.length)continue;
+      putDay(k,dayNotes(k).concat(add));n+=add.length;
+    }
     save();render(false);toast(t("tRestored",{n}));$("ovMenu").classList.remove("on");
   }catch(e){toast(t("tBad"))}
 }
@@ -827,7 +871,7 @@ $("catColors").addEventListener("change",e=>{const i=e.target.closest("input[dat
 renderCatColors();renderLegend();
 let pY=Y;
 function renderPick(){$("pYear").textContent=pY;const td=new Date();
-  $("mgrid").innerHTML=MONTHS_EN.map((_,i)=>{const pre=`${pY}-${pad(i+1)}-`,c=Object.keys(store.notes).filter(k=>k.startsWith(pre)).length;
+  $("mgrid").innerHTML=MONTHS_EN.map((_,i)=>{const pre=`${pY}-${pad(i+1)}-`,c=countNotes(pre);
     return `<button data-pm="${i}" aria-current="${pY===Y&&i===M}" class="${pY===td.getFullYear()&&i===td.getMonth()?"now":""}">${esc(monthShort(i))}<i>${c?esc(nNotes(c)):"&nbsp;"}</i></button>`}).join("")}
 $("bPick").onclick=()=>{pY=Y;renderPick();$("ovPick").classList.add("on")};
 $("pPrev").onclick=()=>{pY--;renderPick()};$("pNext").onclick=()=>{pY++;renderPick()};
