@@ -139,6 +139,37 @@ async def main():
         check(not errs, f"no script errors in the panel {errs}")
         await pg.context.close()
 
+        print("Long words in a sticker")
+        # Long text is clipped with an ellipsis rather than shrunk, and a single long word
+        # breaks with a hyphen where the browser has a dictionary for the page language.
+        # Hyphens depend on the browser, so the check here is the invariant: nothing spills
+        # out of the circle, and nothing is shrunk.
+        long_notes = {"2027-01-11": [{"id": "w1", "t": "Konstantinopolis", "c": -1, "cat": "work"}],
+                      "2027-01-12": [{"id": "w2", "t": "Short", "c": -1, "cat": "work"}],
+                      "2027-01-13": [{"id": "w3", "c": -1, "cat": "work",
+                                      "t": "Hazirlik toplantisi ve uzun bir aciklama metni daha"}]}
+        store2 = ("localStorage.setItem('desklife-cal-v1', "
+                  + json.dumps(json.dumps({"notes": long_notes, "weekStart": 1, "country": "ES",
+                                           "lang": "tr", "fired": {}})) + ")")
+        pg, errs = await page_for(b, base, 1216, 1100, store2, "january-2027")
+        sizes = await pg.evaluate(
+            "['2027-01-11','2027-01-12','2027-01-13'].map(k => {"
+            " const stk = document.querySelector(`[data-k=\"${k}\"] .stk`),"
+            "       sp = stk.querySelector('span:last-child'),"
+            "       box = stk.getBoundingClientRect(), txt = sp.getBoundingClientRect();"
+            " return {font: getComputedStyle(stk).fontSize,"
+            "         spills: txt.width > box.width + 1 || sp.scrollWidth > sp.clientWidth + 1,"
+            "         clipped: sp.scrollHeight > sp.clientHeight + 1}})")
+        # dots differ by a fraction of a pixel, so compare to a tenth
+        fonts = [round(float(s_["font"].rstrip("px")), 1) for s_ in sizes]
+        check(len(set(fonts)) == 1,
+              f"a long word is no longer shrunk; all stickers share one size ({fonts})")
+        check(not any(s_["spills"] for s_ in sizes), "no sticker text spills out of its circle")
+        check(sizes[2]["clipped"], "text too long for the circle is clipped, with an ellipsis")
+        check(not sizes[1]["clipped"], "short text is left alone")
+        check(not errs, f"no script errors with long words {errs}")
+        await pg.context.close()
+
         print("Several notes on one day")
         pg, errs = await page_for(b, base, 1280, 950, seed(lang="en", country="ES"), "january-2027")
         await pg.click('[data-k="2027-01-14"]')

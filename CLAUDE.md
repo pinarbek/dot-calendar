@@ -20,9 +20,14 @@ Context for continuing this project. Read this before changing anything.
 - **Weekday spelling:** `WD3` holds mixed case (`Sun`, `Paz`, `Dom`, `Dg`). The header takes
   it as written; the weekday row is uppercased in CSS, so one dictionary serves both.
 - **Sticker text:** `max(6.5px, 8cqw)` — 8% of the dot, with the old 6.5px floor so small
-  dots stay readable. `fitStk()` drops long words to 7cqw and 6.5cqw with their own floors.
-  Set to 8% on 25 Nov 2026 after 11% read too loud on a 121px dot; 11, 9, 8 and 7 were
-  rendered side by side and 8 chosen.
+  dots stay readable. Set to 8% on 25 Nov 2026 after 11% read too loud on a 121px dot; 11,
+  9, 8 and 7 were rendered side by side and 8 chosen.
+- **Long text is clipped, never shrunk (25 Nov 2026).** `fitStk()` used to drop the font for
+  long words; it now returns nothing. Text past three lines is cut with an ellipsis, and a
+  single long word breaks with a hyphen through `hyphens:auto`. Hyphenation depends on the
+  browser having a dictionary for `<html lang>`: verified in Chromium for tr, es and ca,
+  absent for en, where `overflow-wrap:anywhere` breaks the word without a hyphen rather than
+  letting it spill.
 - **Date numeral:** `20cqw`, at `17%/15%` of the day. It used to sit at `21%/19%` at `25cqw`,
   which left 14% of it under the sticker once that slid to `22%/22%`. Any change to either
   position has to be re-checked against the slid state.

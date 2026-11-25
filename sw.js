@@ -1,6 +1,6 @@
 /* Dot Calendar service worker: makes the installed app open offline.
    Bump VERSION whenever index.html or other shell files change so users get the update. */
-const VERSION = "dot-calendar-v15";
+const VERSION = "dot-calendar-v16";
 const SHELL = [
   "./",
   "./index.html",
