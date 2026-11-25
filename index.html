@@ -52,6 +52,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 @media(max-width:699px){.dows .l{display:none}.dows .s{display:inline}}
 .grid{padding-bottom:clamp(18px,4vw,40px)}
 .day{position:relative;aspect-ratio:1;border-radius:50%;background:var(--up-bg);box-shadow:inset 0 0 0 2px var(--up-ring);color:var(--up-fg);transition:transform .15s}
+/* Sundays are filled in the contour colour; .past/.today/.has below still win */
 .day.we{background:var(--we-bg);box-shadow:none;color:var(--we-fg)}
 .day .n{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:Archivo,"Inter Tight",sans-serif;font-stretch:125%;font-size:clamp(9px,1.05vw,12.5px);font-weight:700;letter-spacing:.03em;line-height:1}
 @media(min-width:700px){.day .n{left:21%;top:19%;transform:none}}
@@ -525,7 +526,7 @@ function render(anim){
     const d=new Date(Y,M,c-lead+1),k=key(d.getFullYear(),d.getMonth(),d.getDate()),n=store.notes[k];
     if(d.getMonth()!==M){h+=`<div class="day out" aria-hidden="true"></div>`;continue}
     const hol=holOf(k),off=hol&&hol.kind!=="fun";
-    const wk=d.getDay()%6===0;
+    const wk=d.getDay()===0;
     const cls=["day",wk?"we":"",k===tk?"today":k<tk?"past":"",off?"hol":"",n?"has":""].join(" ");
     const lab=fmtLong(d)+(k===tk?" ("+t("today")+")":"")+(hol?", "+hol.name:"")+(n?": "+n.t:"")+(n&&n.r?", "+t("reminder")+" "+n.r:"");
     const hs=!n&&off,col=n?colorOf(k,n):hs?catCol("holiday"):"";
