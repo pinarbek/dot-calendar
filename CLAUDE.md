@@ -89,6 +89,11 @@ Context for continuing this project. Read this before changing anything.
   off), a system notification when the app is installed and running or backgrounded, and
   `.ics` export with a VALARM for anything that must fire regardless. Do not add a service
   worker push path or a backend for this.
+- **Desktop and mobile only; tablet is not a target (25 Nov 2026).** The one-screen layout
+  starts at 960px and the phone layout runs below it. Lowering that to 700px so an iPad fits
+  the month on one screen was tried and reverted at the owner's request, as was enlarging
+  the month name to fill the header on months with no date. The design is not to be bent for
+  tablet.
 - **Rejected directions:** AI-illustrated monthly scenes, and a giant-month-word poster. Both are in `archive/` for reference only.
 - **Never copy third-party artwork:** The owner once asked to feed other artists' images to an image model as references. That was declined: describe styles in words instead.
 
