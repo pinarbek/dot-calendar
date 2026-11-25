@@ -194,7 +194,13 @@ body{font-family:Archivo,"Inter Tight",system-ui,sans-serif}
      reserve (header, nav, weekday row, legend and logo) was measured at 367-429px and
      tracks the window height, so it is modelled as 300px + 9.5vh. --rows comes from
      render(), so four-, five- and six-row months each get the largest dot that still fits. */
-  #sheet{width:max(470px,calc((100vh - 390px) * 1.18));max-width:100%;margin-inline:auto}
+  /* Size the dots from the height that is actually left, not a tuned constant. The reserve
+     above and below the grid (bar, header, nav, weekday row, logo) was measured across eight
+     windows at 186px + 17.4vh; 235px + 18.5vh keeps a margin on every window measured. --rows comes from render(), so
+     a six-row month stays on one screen and a four-row month is not left small. */
+  #sheet{--gap:10px;--avail:calc(100vh - 235px - 18.5vh);
+         --dot:calc((var(--avail) - (var(--rows,6) - 1) * var(--gap)) / var(--rows,6));
+         width:max(440px,calc(7 * var(--dot) + 6 * var(--gap)));max-width:100%;margin-inline:auto}
   .dows,.grid{max-width:none}
   .mo .w{white-space:nowrap;font-size:clamp(15px,2.4vh,24px)!important;padding-left:12px}
 }

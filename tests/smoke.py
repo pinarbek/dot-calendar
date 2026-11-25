@@ -85,18 +85,28 @@ async def main():
             await pg.context.close()
 
         print("Desktop widths and heights")
-        # The sheet width is driven by viewport height. On a tall window it used to outgrow its
-        # own grid column and sit on top of the side list, so check the gap, not just the height.
-        for w, h in [(1440, 900), (1440, 1100), (1600, 1000), (1920, 1080), (1000, 1100), (1280, 800)]:
-            pg, errs = await page_for(b, base, w, h, seed(lang="en", country="TR"), "january-2027")
-            box = await pg.evaluate(
-                "(() => {const g = document.querySelector('#grid').getBoundingClientRect();"
-                " return {bottom: g.bottom,"
-                "         hscroll: document.documentElement.scrollWidth - document.documentElement.clientWidth}})()")
-            check(box["hscroll"] <= 0, f"no horizontal scroll at {w}x{h}")
-            check(box["bottom"] <= h, f"month fits one screen at {w}x{h} (grid bottom {box['bottom']:.0f})")
-            check(not errs, f"no script errors at {w}x{h}")
-            await pg.context.close()
+        # Two bugs hid here before: measuring only #grid missed the logo below it, and testing
+        # only short months missed six-row ones. Measure the lowest element, and include
+        # August 2027, which needs six rows with a Monday week start.
+        for w, h in [(1440, 900), (1366, 768), (1440, 1100), (1600, 1000), (1920, 1080),
+                     (1000, 1100), (1280, 800), (2560, 1440), (1512, 982)]:
+            for month, rows in [("january-2027", 5), ("august-2027", 6), ("february-2027", 4)]:
+                pg, errs = await page_for(b, base, w, h, seed(lang="en", country="TR"), month)
+                box = await pg.evaluate(
+                    "(() => {const app = document.querySelector('.app'); let bottom = 0, what = '';"
+                    " app.querySelectorAll('*').forEach(el => {const r = el.getBoundingClientRect();"
+                    "   if (r.width && r.height && getComputedStyle(el).visibility !== 'hidden'"
+                    "       && r.bottom > bottom) {bottom = r.bottom; what = el.className || el.tagName}});"
+                    " return {bottom, what,"
+                    "         dot: document.querySelector('.day').getBoundingClientRect().width,"
+                    "         hscroll: document.documentElement.scrollWidth - document.documentElement.clientWidth}})()")
+                check(box["hscroll"] <= 0, f"no horizontal scroll at {w}x{h} {month}")
+                check(box["bottom"] <= h,
+                      f"{rows}-row {month} fits one screen at {w}x{h} "
+                      f"(lowest {box['what']} at {box['bottom']:.0f})")
+                check(box["dot"] >= 50, f"dots stay legible at {w}x{h} {month} ({box['dot']:.0f}px)")
+                check(not errs, f"no script errors at {w}x{h} {month}")
+                await pg.context.close()
 
         print("Month panel")
         pg, errs = await page_for(b, base, 1440, 900, seed(lang="en", country="ES"), "january-2027")
