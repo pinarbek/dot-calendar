@@ -38,7 +38,11 @@ Context for continuing this project. Read this before changing anything.
   `--avail: calc(100vh - 302px - 18.5vh)`, `--dot: (--avail - (--rows - 1) * --gap) / --rows`,
   sheet width `7 * --dot + 6 * --gap`. `--rows` is set by `render()`. The 235px + 18.5vh
   reserve was measured across eight windows (186px + 17.4vh), plus a margin and the 67px the
-  stacked header adds. Dots land at 73-141px on four-row months, 57-138px on five-row and
+  stacked header adds. **Dots therefore differ month to month** — 99px on a six-row month
+  against 121px on a five-row one at the same window. Queried by the owner on 25 Nov 2026
+  and kept: both months already fill the screen, so matching them would mean either
+  shrinking every month to the six-row size or letting six-row months scroll. Shrinking
+  when a month needs six rows is the accepted behaviour. Dots land at 73-141px on four-row months, 57-138px on five-row and
   54-137px on six-row.
 - **Month list, note count and legend live in a panel** (`#ovList`), opened by the Notes
   button, sliding in from the right, anchored to the right edge, scrolling on its own. The

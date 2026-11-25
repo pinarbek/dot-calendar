@@ -33,6 +33,8 @@ optimistic. "Finalised" means the checklist under *Before the custom domain* is 
 
 - [x] A note can be moved to another day by dragging its sticker, on mouse and on touch
 
+- [x] Month-to-month dot size confirmed: a six-row month shrinks rather than scrolling
+
 ## Before the custom domain
 
 Device coverage is the gap. The owner's rule is iOS **and** Android, phone **and** tablet.
