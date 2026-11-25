@@ -45,9 +45,13 @@ Device coverage is the gap. The owner's rule is iOS **and** Android, phone **and
 - [ ] Install and use on an iPhone (Safari → Add to Home Screen): layout, sticker reveal,
       reminder pop-up, offline after airplane mode
 - [ ] Same on an Android phone (Chrome → Install app)
-- [ ] **Tablet layout.** One breakpoint at 960px. An iPad in portrait (768–1024px) falls
-      into the phone branch, where stickers hide their text. Dots measure 94px there, so the
-      question is now about sticker text and touch targets, not space. Separate pass
+- [x] **Tablet checked, and the claim here was wrong:** an iPad in portrait never fell into
+      the phone branch. Text showed at 768px and up all along. The real gap was 430–699px,
+      where 75–87px dots were treated as phone-sized; sticker text now follows the dot, not
+      the viewport
+- [ ] The hidden date numeral leaves roughly 174px blank above the month on a tablet when
+      browsing a month other than the current one. Space is reserved so the grid does not
+      jump between months; worth revisiting whether that trade is right on small screens
 - [ ] Decide the weekday spelling: the reference shows `Sun`, the app renders `SUN` because
       `WD3` holds uppercase strings. Changing it touches the weekday row too, in four
       languages

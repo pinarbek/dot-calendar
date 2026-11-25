@@ -37,7 +37,10 @@ Context for continuing this project. Read this before changing anything.
 - **Calendar range:** Opens on December 2026 (before Dec 2026) and is the "2027 calendar". Navigation is unlimited, plus a month picker.
 - **Layout:** One column at every width. On desktop (≥960px) the whole month must fit one
   screen without scrolling, measured to the lowest element on the page, not just the grid.
-  On phones the stickers show no text (too small), only colour.
+  Stickers show words wherever the **dot** is at least 56px, and are colour only below
+  that — a container query on the day, not a viewport breakpoint. The old 699px cutoff
+  hid text on 75px dots in a 600px window while a tablet showed it on 96px ones.
+  Browsers without container queries keep the old viewport rule.
 - **Header is stacked at every width (decided 25 Nov 2026).** Numeral above, month and year
   below, weekday or note count on the right — matching the owner's reference, and what the
   narrow layout always did. Offered as A/B/C against measurements; the owner chose **C**,
