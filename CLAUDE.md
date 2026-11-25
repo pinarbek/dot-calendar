@@ -47,6 +47,13 @@ Context for continuing this project. Read this before changing anything.
   count it takes `.cnt` and is sized like the weekday row (14px desktop, 10px phone), not
   like the header.
 - **Logo:** The ola | CREATIVE logo is a white PNG embedded as a CSS mask, so it takes `var(--ink)` and works in both themes. On the calendar screen it sits under the grid; the panel carries its own copy at the bottom.
+- **A day can hold several notes, and the circle advances through the day (agreed 25 Nov
+  2026).** One day is still one circle, one colour, one label — it just moves on. A day
+  ahead of today opens on its first note; today shows the next note still to come, so once
+  11:00 passes the 13:00 one takes the circle; once all have passed, and on any past day,
+  the circle keeps the last note. Notes sort untimed first, then by time. No "+2 more" badge
+  on the circle: the panel lists them. `shownNote()` holds this rule, and `tick()` re-renders
+  when the signature of shown notes changes, so the circle turns over on its own.
 - **A note moves by dragging its sticker onto another day.** Mouse drags after 7px; a
   finger must hold still for 300ms first, so the month swipe and page scrolling still work
   (a finger that travels early is treated as a swipe). Dropping on a day that already has a

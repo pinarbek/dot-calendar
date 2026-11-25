@@ -7,7 +7,7 @@ tests/output/. Exits with code 1 if anything fails.
     pip install playwright && playwright install chromium
     python3 tests/smoke.py
 """
-import asyncio, datetime, functools, http.server, pathlib, sys, threading
+import asyncio, datetime, functools, http.server, json, pathlib, sys, threading
 from playwright.async_api import async_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -59,6 +59,7 @@ async def page_for(browser, base, w, h, store, hash_):
     return pg, errors
 
 async def main():
+    now_ = datetime.datetime.now()
     srv, base = serve()
     async with async_playwright() as p:
         b = await p.chromium.launch()
@@ -136,6 +137,36 @@ async def main():
         await pg.wait_for_timeout(400)
         check(not await pg.is_visible("#ovList"), "close button dismisses the panel")
         check(not errs, f"no script errors in the panel {errs}")
+        await pg.context.close()
+
+        print("The circle advances through the day")
+        # One circle per day still, but on today it shows the next note yet to come, so the
+        # 13:00 one takes over once 11:00 has passed. Ahead of today a day opens on its
+        # first note; once every note has passed, and on any past day, it keeps the last.
+        soon = (now_ + datetime.timedelta(minutes=90)).strftime("%H:%M")
+        three = [{"id": "a", "t": "Meeting", "c": -1, "cat": "meeting", "r": "00:01"},
+                 {"id": "b", "t": "Lunch", "c": -1, "cat": "", "r": soon},
+                 {"id": "c", "t": "Birthday", "c": -1, "cat": "birthday", "r": "23:59"}]
+        days = {now_.strftime("%Y-%m-%d"): three,
+                (now_ - datetime.timedelta(days=3)).strftime("%Y-%m-%d"): three,
+                (now_ + datetime.timedelta(days=3)).strftime("%Y-%m-%d"): three}
+        store = ("localStorage.setItem('desklife-cal-v1', "
+                 + json.dumps(json.dumps({"notes": days, "weekStart": 1, "country": "ES",
+                                          "lang": "en", "fired": {}})) + ")")
+        pg, errs = await page_for(b, base, 1280, 900, store,
+                                  now_.strftime("%B").lower() + "-" + now_.strftime("%Y"))
+        while await pg.is_visible("#ovRem"):
+            await pg.click("#remOk")
+            await pg.wait_for_timeout(250)
+        async def circle(day):
+            return (await pg.inner_text(f'[data-k="{day}"] .stk')).upper()
+        ahead = await circle((now_ + datetime.timedelta(days=3)).strftime("%Y-%m-%d"))
+        check("MEETING" in ahead, f"a day still ahead opens on its first note ({ahead!r})")
+        here = await circle(now_.strftime("%Y-%m-%d"))
+        check("LUNCH" in here, f"today shows the next note still to come ({here!r})")
+        gone = await circle((now_ - datetime.timedelta(days=3)).strftime("%Y-%m-%d"))
+        check("BIRTHDAY" in gone, f"a past day keeps its last note ({gone!r})")
+        check(not errs, f"no script errors while the circle advances {errs}")
         await pg.context.close()
 
         print("Upgrading old data")

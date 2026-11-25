@@ -567,8 +567,19 @@ const putDay=(k,a)=>{if(a&&a.length)store.notes[k]=sortDay(a);else delete store.
 const noteById=(k,id)=>dayNotes(k).find(n=>n.id===id);
 const allNotes=()=>{const o=[];for(const k of Object.keys(store.notes))for(const n of dayNotes(k))o.push([k,n]);return o};
 const countNotes=pre=>Object.keys(store.notes).filter(k=>k.startsWith(pre)).reduce((a,k)=>a+dayNotes(k).length,0);
-/* Which of the day's notes the circle shows. Step one: the first. */
-const shownNote=k=>dayNotes(k)[0];
+/* Which of the day's notes the circle shows. A day still has exactly one circle, one
+   colour and one label; it just advances through the day. Ahead of today the day opens on
+   its first note. On today it shows the next note still to come, so once 11:00 passes the
+   13:00 one takes the circle. Once the last has passed, and on any past day, the circle
+   keeps that last note, so the day reads as what it held. */
+const minsOf=n=>n.r?(+n.r.slice(0,2))*60+(+n.r.slice(3,5)):0;
+const shownNote=k=>{
+  const a=dayNotes(k);if(!a.length)return undefined;
+  const d=new Date(),today=key(d.getFullYear(),d.getMonth(),d.getDate());
+  if(k>today)return a[0];
+  if(k<today)return a[a.length-1];
+  return a.find(n=>minsOf(n)>d.getHours()*60+d.getMinutes())||a[a.length-1];
+};
 function migrate(){
   let touched=false;
   for(const[k,v]of Object.entries(store.notes)){
@@ -704,13 +715,15 @@ function showRem(){
 const nextRem=()=>{remQ.shift();$("ovRem").classList.remove("on");showRem()};
 $("remOk").onclick=nextRem;
 $("remOpen").onclick=()=>{const k=remQ[0][0];nextRem();Y=+k.slice(0,4);M=+k.slice(5,7)-1;render(true);openNote(k)};
-let lastDay=new Date().toDateString();
+let lastDay=new Date().toDateString(),shownSig="";
 function tick(){
   const nowT=Date.now();let ch=false;
   for(const[k,n]of allNotes()){if(!n.r)continue;const fa=fireAt(k,n).getTime(),id=k+"@"+n.r+"/"+(n.w||0);
     if(fa<=nowT&&nowT-fa<36*36e5&&store.fired[n.id]!==id){store.fired[n.id]=id;ch=true;remQ.push([k,n]);
       if(canNotif()&&Notification.permission==="granted"){try{new Notification(`${t("reminder")} · ${n.r}`,{body:n.t,tag:id,icon:"icons/icon-192.png"})}catch(e){}}}}
   if(ch){save();showRem()}
+  const sig=Object.keys(store.notes).map(k=>{const n=shownNote(k);return n?k+":"+n.id:""}).join("|");
+  if(sig!==shownSig){shownSig=sig;render(false)}
   if(new Date().toDateString()!==lastDay){lastDay=new Date().toDateString();now=new Date();revealSoon()}else renderToday();
 }
 function renderToday(){
