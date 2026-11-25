@@ -80,7 +80,7 @@ body.dragmode{touch-action:none;user-select:none;-webkit-user-select:none}
 .reveal .day.today .stk{animation:uncover 1.2s cubic-bezier(.3,1.35,.45,1) .5s both}
 @keyframes uncover{0%{left:0;top:0}35%{left:-3%;top:-3%}100%{left:22%;top:22%}}
 .stk{position:absolute;left:0;top:0;transition:left .5s cubic-bezier(.3,1.3,.5,1),top .5s cubic-bezier(.3,1.3,.5,1);width:100%;aspect-ratio:1;border-radius:50%;background:var(--c);color:var(--sc);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:9% 8%;z-index:3;font-family:Archivo,"Inter Tight",sans-serif;font-stretch:100%;font-weight:700;font-size:clamp(6.5px,.6vw,8px);line-height:1.2;text-transform:uppercase;letter-spacing:.01em;pointer-events:none}
-@supports (container-type:inline-size){.stk{font-size:11cqw}}
+@supports (container-type:inline-size){.stk{font-size:max(6.5px,8cqw)}}
 .stk b{font-size:1.15em;font-weight:800;font-stretch:125%}
 .stk span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow-wrap:normal;word-break:normal;hyphens:none;max-width:100%}
 
@@ -609,7 +609,7 @@ const key=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const toast=t=>{const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),2200)};
 const ink=hex=>{const v=parseInt(hex.slice(1),16),r=(v>>16)/255,g=(v>>8&255)/255,b=(v&255)/255,f=c=>c<=.03928?c/12.92:((c+.055)/1.055)**2.4;return .2126*f(r)+.7152*f(g)+.0722*f(b)>.3?"#111":"#fff"};
-const fitStk=t=>{const w=Math.max(...t.split("\n")[0].slice(0,60).split(/\s+/).map(x=>x.length));return w>13?"8cqw":w>10?"9.5cqw":""};
+const fitStk=t=>{const w=Math.max(...t.split("\n")[0].slice(0,60).split(/\s+/).map(x=>x.length));return w>13?"max(5.5px,6.5cqw)":w>10?"max(6px,7cqw)":""};
 function render(anim){
   const tday=new Date(),isCur=tday.getFullYear()===Y&&tday.getMonth()===M;
   $("big").textContent=isCur?tday.getDate():pad(M+1);
